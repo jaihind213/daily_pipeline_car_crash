@@ -52,6 +52,13 @@ def pull_chicago_dataset(
     logging.info(
         f"where clause: {where_clause} for {for_year}-{mm}-{dd} for dataset_id: {dataset_id} ..."  # noqa: E501
     )
+
+    if output_dir_path.startswith("/") or output_dir_path.startswith(
+        "file://"
+    ):  # noqa: E501
+        # pandas does not create local dirs.
+        os.makedirs(output_dir_path, exist_ok=True)
+
     idx = 0
     with Socrata(
         domain,
@@ -73,7 +80,7 @@ def pull_chicago_dataset(
                 if df.empty:
                     break
                 df.to_parquet(
-                    output_dir_path + f"output{idx}.parquet",
+                    output_dir_path + f"/output{idx}.parquet",
                     engine="pyarrow",
                     index=True,
                     compression="snappy",
@@ -89,10 +96,10 @@ def pull_chicago_dataset(
                         )
                     )
                 idx += 1
-                offset += batch_size
                 logging.info(
                     f"fetched {len(df)} records from offset {offset} for dataset_id: {dataset_id} for {for_year}-{mm}-{dd} ..."  # noqa: E501
                 )
+                offset += batch_size
                 # we are pulling from public dataset,
                 # so we need to sleep for a while to not overload the api
                 time.sleep(sleep_time_millis / 1000)
