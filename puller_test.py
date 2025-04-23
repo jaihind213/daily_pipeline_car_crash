@@ -11,8 +11,12 @@ def test_pull_chicago_dataset():
     Test the pull_dataset function.
     """
     data_dir = "/tmp/pull_data/"
-    shutil.rmtree(data_dir)
-    os.mkdir(data_dir)
+
+    if os.path.isdir(data_dir):
+        shutil.rmtree(data_dir)
+    else:
+        os.makedirs(data_dir, exist_ok=True)
+
     fetched = pull_chicago_dataset(
         domain="data.cityofchicago.org",
         dataset_id="85ca-t3if",
