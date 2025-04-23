@@ -28,6 +28,7 @@ def pull_chicago_dataset(
 ) -> int:
     """
     Pulls a dataset from the Chicago data portal using the Socrata API.
+    :param sleep_time_millis: time between api calls (so that we don't overload the api)
     :param output_dir_path: output path to save the parquet files
     :param domain:  ex: 'data.cityofchicago.org'
     :param dataset_id: ex: '85ca-t3if' from https://dev.socrata.com/foundry/data.cityofchicago.org/85ca-t3if  # noqa: E501
