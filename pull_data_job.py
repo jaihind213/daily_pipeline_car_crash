@@ -33,8 +33,12 @@ if __name__ == "__main__":
     sleep_time_millis = int(
         get_config().get("pull_job", "sleep_time_millis", fallback="100")
     )
-    batch_size = int(get_config().get("pull_job", "batch_size", fallback="2000"))  # noqa: E501
-    timeout_sec = int(get_config().get("pull_job", "timeout_sec", fallback="10"))  # noqa: E501
+    batch_size = int(
+        get_config().get("pull_job", "batch_size", fallback="2000")
+    )  # noqa: E501
+    timeout_sec = int(
+        get_config().get("pull_job", "timeout_sec", fallback="10")
+    )  # noqa: E501
     domain = get_config().get(
         "pull_job", "domain", fallback="data.cityofchicago.org"
     )  # noqa: E501
