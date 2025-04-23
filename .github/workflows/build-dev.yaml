@@ -1,0 +1,47 @@
+name: Run Compilation and Tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: docker.io/jaihind213
+
+jobs:
+  compile_test:
+    runs-on: ubuntu-latest
+    environment: cicd
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    - name: 🐍 let Pythons play
+      run: |
+        echo `pwd`
+        ls -lah        
+        python -m pip install --upgrade pip
+        pip install pytest==8.3.2
+        pip install isort==5.13.2
+        pip install flake8-bugbear==24.4.26
+        pip install black==24.4.2
+        pip install flake8==7.1.0
+
+        pip install --upgrade poetry==1.6.1
+        poetry export --without-hashes --format=requirements.txt > requirements.txt 
+        pip install -r requirements.txt
+    - name: 🚧 isort,flake,black check
+      run: |
+        isort --check .
+        black --check .
+        flake8 --format=pylint .
+    - name: 👀 Tests
+      run: |
+        export SOCRATA_APP_TOKEN=${{ secrets.SOCRATA_APP_TOKEN }}
+        pytest .
+    - name: 🔥Tear down
+      run: |
+        docker-compose down -v || echo "tried to do docker compose down, it errored out. no worries"
