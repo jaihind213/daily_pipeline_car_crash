@@ -20,7 +20,7 @@ def test_pull_chicago_dataset():
     fetched = pull_chicago_dataset(
         domain="data.cityofchicago.org",
         dataset_id="85ca-t3if",
-        for_year=2025,
+        for_year=2024,
         for_month=4,
         for_day=20,
         time_filter_column="crash_date",
@@ -34,7 +34,7 @@ def test_pull_chicago_dataset():
     )
 
     # Check if the number of records fetched is greater than zero
-    assert fetched == 202, "fetched records count is not as expected"
+    assert fetched == 283, "fetched records count is not as expected"
 
     # Direct query from Parquet file
     parquet_count = duckdb.query(
@@ -52,4 +52,4 @@ def test_pull_chicago_dataset():
             if os.path.isfile(os.path.join(data_dir, f))  # noqa: E501
         ]
     )
-    assert num_files == 2, "number of batches is not as expected"
+    assert num_files == 3, "number of batches is not as expected"
