@@ -11,6 +11,18 @@ debug_dataframes = (
 )  # noqa: E501
 
 
+def __write_to_parquet(df, path, idx):
+    if path.startswith("/") or path.startswith("file://"):  # noqa: E501
+        # pandas does not create local dirs.
+        os.makedirs(path, exist_ok=True)
+    df.to_parquet(
+        path + f"/output{idx}.parquet",
+        engine="pyarrow",
+        index=True,
+        compression="snappy",
+    )
+
+
 def pull_chicago_dataset(
     dataset_id,
     for_year: int,
@@ -53,12 +65,6 @@ def pull_chicago_dataset(
         f"where clause: {where_clause} for {for_year}-{mm}-{dd} for dataset_id: {dataset_id} ..."  # noqa: E501
     )
 
-    if output_dir_path.startswith("/") or output_dir_path.startswith(
-        "file://"
-    ):  # noqa: E501
-        # pandas does not create local dirs.
-        os.makedirs(output_dir_path, exist_ok=True)
-
     idx = 0
     with Socrata(
         domain,
@@ -79,12 +85,9 @@ def pull_chicago_dataset(
                 df = pd.DataFrame.from_records(results)
                 if df.empty:
                     break
-                df.to_parquet(
-                    output_dir_path + f"/output{idx}.parquet",
-                    engine="pyarrow",
-                    index=True,
-                    compression="snappy",
-                )
+
+                __write_to_parquet(df, output_dir_path, idx)
+
                 recs_fetched += len(df)
                 if debug_dataframes:
                     df[f"ds_{dataset_id}_{idx}"] = None
