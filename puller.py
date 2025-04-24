@@ -11,11 +11,11 @@ debug_dataframes = (
 )  # noqa: E501
 
 
-def __write_to_parquet(df, path, idx):
+def __write_to_parquet(pandas_df, path, idx):
     if path.startswith("/") or path.startswith("file://"):  # noqa: E501
         # pandas does not create local dirs.
         os.makedirs(path, exist_ok=True)
-    df.to_parquet(
+    pandas_df.to_parquet(
         path + f"/output{idx}.parquet",
         engine="pyarrow",
         index=True,
