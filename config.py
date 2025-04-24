@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 def configure_logging():
-    log_level = job_config["logging"]["level"]
+    log_level = job_config.get("logging", "log_level", fallback="info")
     # set default loglevel
     logging.basicConfig(level=logging._nameToLevel[log_level.upper()])
 
