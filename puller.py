@@ -1,8 +1,11 @@
 import logging
 import os
+import shutil
 import time
+from datetime import datetime
 
 import pandas as pd
+import pytz
 from sodapy import Socrata
 from tabulate import tabulate
 
@@ -11,12 +14,15 @@ debug_dataframes = (
 )  # noqa: E501
 
 
-def __write_to_parquet(pandas_df, path, idx):
+def __write_to_parquet(pandas_df, path, file_idx):
     if path.startswith("/") or path.startswith("file://"):  # noqa: E501
-        # pandas does not create local dirs.
+        if file_idx == 0:
+            shutil.rmtree(path, ignore_errors=True)
         os.makedirs(path, exist_ok=True)
+
+    now = datetime.now(pytz.timezone("UTC"))
     pandas_df.to_parquet(
-        path + f"/output{idx}.parquet",
+        path + f"/output{file_idx}_{now.timestamp()}.parquet",
         engine="pyarrow",
         index=True,
         compression="snappy",

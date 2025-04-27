@@ -32,6 +32,22 @@ def test_pull_chicago_dataset():
         batch_size=101,
         sleep_time_millis=100,
     )
+    # pull again lets see if overwritten
+    fetched = pull_chicago_dataset(
+        domain="data.cityofchicago.org",
+        dataset_id="85ca-t3if",
+        for_year=2024,
+        for_month=4,
+        for_day=20,
+        time_filter_column="crash_date",
+        output_dir_path=data_dir,
+        app_token=os.environ.get("SOCRATA_APP_TOKEN"),
+        username=None,
+        password=None,
+        timeout_sec=10,
+        batch_size=101,
+        sleep_time_millis=100,
+    )
 
     # Check if the number of records fetched is greater than zero
     assert fetched == 283, "fetched records count is not as expected"
