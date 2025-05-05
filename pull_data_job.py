@@ -62,7 +62,7 @@ def __pull_data(pull_date: datetime.date, konfig) -> dict[str:int]:
 if __name__ == "__main__":
     # look in project dir for defaults.
     job_start_time = datetime.now()
-    if len(sys.argv) < 1:
+    if len(sys.argv) < 2:
         logger.error(
             "usage: python pull_data_job.py <config_file_path> <yyyy-mm-dd> "
         )  # noqa: E501

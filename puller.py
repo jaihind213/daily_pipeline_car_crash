@@ -13,6 +13,8 @@ debug_dataframes = (
     os.environ.get("DEBUG_DATAFRAMES", "false").lower() == "true"
 )  # noqa: E501
 
+os.environ["TZ"] = "GMT"
+
 
 def __write_to_parquet(pandas_df, path, file_idx):
     if path.startswith("/") or path.startswith("file://"):  # noqa: E501
@@ -43,6 +45,7 @@ def pull_chicago_dataset(
     batch_size=2000,
     sleep_time_millis=100,
     domain="data.cityofchicago.org",
+    columns=None,
 ) -> int:
     """
     Pulls a dataset from the Chicago data portal using the Socrata API.
@@ -59,6 +62,7 @@ def pull_chicago_dataset(
     :param timeout_sec:
     :param batch_size:
     :param time_filter_column: The timestamp column to filter on, e.g., 'crash_date'  # noqa: E501
+    :params columns: list of columns to fetch from the dataset
     :return: number of records fetched
     """
 
@@ -70,6 +74,7 @@ def pull_chicago_dataset(
     logging.info(
         f"where clause: {where_clause} for {for_year}-{mm}-{dd} for dataset_id: {dataset_id} ..."  # noqa: E501
     )
+    select_columns = "*" if not columns else ",".join(set(list(columns))).upper()
 
     idx = 0
     with Socrata(
@@ -86,16 +91,15 @@ def pull_chicago_dataset(
                     offset=offset,
                     limit=batch_size,
                     where=where_clause,
-                    select="*",
+                    select=select_columns,
                 )
                 df = pd.DataFrame.from_records(results)
                 if df.empty:
                     break
 
-                __write_to_parquet(df, output_dir_path, idx)
-
                 recs_fetched += len(df)
-                if debug_dataframes:
+                if not debug_dataframes:
+                    print(df.dtypes)
                     df[f"ds_{dataset_id}_{idx}"] = None
                     print(
                         tabulate(
@@ -104,6 +108,9 @@ def pull_chicago_dataset(
                             tablefmt="psql",
                         )
                     )
+
+                __write_to_parquet(df, output_dir_path, idx)
+
                 idx += 1
                 logging.info(
                     f"fetched {len(df)} records from offset {offset} for dataset_id: {dataset_id} for {for_year}-{mm}-{dd} ..."  # noqa: E501

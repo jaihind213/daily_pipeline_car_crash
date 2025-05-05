@@ -5,6 +5,8 @@ import duckdb
 
 from puller import pull_chicago_dataset
 
+os.environ["TZ"] = "GMT"
+
 
 def test_pull_chicago_dataset():
     """
@@ -56,6 +58,12 @@ def test_pull_chicago_dataset():
     parquet_count = duckdb.query(
         "SELECT COUNT(*) FROM '/tmp/pull_data/*.parquet'"
     ).fetchone()[0]
+
+    distinct_date_seen = duckdb.query(
+        "SELECT count(DISTINCT CAST(crash_date AS DATE))  FROM '/tmp/pull_data/*.parquet'"  # noqa: E501
+    ).fetchone()[0]
+    assert distinct_date_seen == 1, "distinct date seen should be 1"
+
     assert (
         parquet_count == fetched
     ), "records found in the Parquet file does not match the fetched count"
