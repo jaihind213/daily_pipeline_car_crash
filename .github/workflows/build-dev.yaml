@@ -35,7 +35,7 @@ jobs:
         pip install -r requirements.txt
     - name: 🚧 isort,flake,black check
       run: |
-        isort --check .
+        isort --profile=black --check .
         black --check .
         flake8 --format=pylint .
     - name: 👀 Tests
