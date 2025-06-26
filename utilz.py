@@ -4,6 +4,8 @@ import re
 from typing import Tuple
 
 from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+from tabulate import tabulate
 
 
 def get_output_path(path_prefix, date: datetime.date):
@@ -138,4 +140,51 @@ def get_spark_session(config, app_name):
     for key, value in spark_configs.items():
         builder.config(key, value)
     spark = builder.getOrCreate()
+
+    # Register the set sketch UDFs
+    jvm = spark._jvm
+    jvm_spark = spark._jsparkSession
+    jvm.io.github.jaihind213.SetAggregator.register(jvm_spark, 4096, 9001)
     return spark
+
+
+def debug_dataframes(spark_df, name):
+    """
+    Debug the dataframe by showing its schema and first few rows.
+    :param spark_df: DataFrame to debug
+    :param name: Name of the DataFrame for logging
+    :param spark: Spark session
+    """
+    if not os.environ.get("DEBUG_DATAFRAMES", "true").lower() == "true":
+        return
+
+    if not spark_df:
+        return
+
+    df1 = spark_df.withColumn("debugging_" + name, F.lit(""))
+    df1.printSchema()
+    df1.show(5, truncate=False)
+
+
+def debug_pandas_df(df, name):
+    """
+    Debug the pandas dataframe by showing its schema and first few rows.
+    :param df:
+    :param name: name of df
+    """
+    if not os.environ.get("DEBUG_DATAFRAMES", "true").lower() == "true":
+        return
+
+    if df is None:
+        return
+
+    df[name] = None
+    print(df.dtypes)
+
+    print(
+        tabulate(
+            df.head(10),
+            headers="keys",
+            tablefmt="psql",
+        )
+    )

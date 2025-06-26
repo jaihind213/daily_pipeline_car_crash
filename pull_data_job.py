@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import sys
+import traceback
 from datetime import datetime
 
 import puller
@@ -90,6 +91,7 @@ if __name__ == "__main__":
         )
     except Exception as e:
         logger.error("Error pulling data: %s", e)
+        traceback.print_exc()
         report_job_stats(
             "pull_data_job",
             date_to_pull,

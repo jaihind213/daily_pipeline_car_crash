@@ -35,7 +35,8 @@ def ingest_to_iceberg(
         logging.info("transforming data using %s", transformer_name)
         df_meta = spark.table(fqtn)
         schema_dict = {
-            field.name: field.dataType.simpleString() for field in df_meta.schema.fields
+            field.name: field.dataType.simpleString()
+            for field in df_meta.schema.fields  # noqa: E501
         }
         df = transform(transformer_name, df, schema_dict, data_timezone)
     else:

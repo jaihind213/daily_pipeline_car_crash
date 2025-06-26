@@ -62,14 +62,22 @@ def test_basic_transform():
             # test _i columns
             schema_dict["bool_i"] = "boolean"
 
-            df = transform.basic_transform(df, schema_dict, timezone="America/Chicago")
+            df = transform.basic_transform(
+                df, schema_dict, timezone="America/Chicago"
+            )  # noqa: E501
             row = df.collect()[0]
 
             assert row["string"] == rec[0]
             assert row["int"] == (int(rec[1]) if rec[1] is not None else None)
-            assert row["bool"] == (bool(rec[2]) if rec[2] is not None else None)
-            assert row["float"] == (float(rec[3]) if rec[3] is not None else None)
-            assert row["double"] == (float(rec[4]) if rec[4] is not None else None)
+            assert row["bool"] == (
+                bool(rec[2]) if rec[2] is not None else None
+            )  # noqa: E501
+            assert row["float"] == (
+                float(rec[3]) if rec[3] is not None else None
+            )  # noqa: E501
+            assert row["double"] == (
+                float(rec[4]) if rec[4] is not None else None
+            )  # noqa: E501
             assert row["timestamp"] == (
                 datetime.strptime("2023-01-01 23:30:01", "%Y-%m-%d %H:%M:%S")
                 if rec[5] is not None

@@ -1,5 +1,6 @@
 import json
 import sys
+import traceback
 from datetime import datetime
 
 import utilz
@@ -64,6 +65,7 @@ if __name__ == "__main__":
                 )
     except Exception as e:
         logger.error("Error during ingestion: %s", str(e))
+        traceback.print_exc()
         report_job_stats(
             "ingest_" + table_name,
             job_date,

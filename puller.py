@@ -7,11 +7,8 @@ from datetime import datetime
 import pandas as pd
 import pytz
 from sodapy import Socrata
-from tabulate import tabulate
 
-debug_dataframes = (
-    os.environ.get("DEBUG_DATAFRAMES", "false").lower() == "true"
-)  # noqa: E501
+from utilz import debug_pandas_df
 
 os.environ["TZ"] = "GMT"
 
@@ -74,7 +71,9 @@ def pull_chicago_dataset(
     logging.info(
         f"where clause: {where_clause} for {for_year}-{mm}-{dd} for dataset_id: {dataset_id} ..."  # noqa: E501
     )
-    select_columns = "*" if not columns else ",".join(set(list(columns))).upper()
+    select_columns = (
+        "*" if not columns else ",".join(set(list(columns))).upper()
+    )  # noqa: E501
 
     idx = 0
     with Socrata(
@@ -98,16 +97,7 @@ def pull_chicago_dataset(
                     break
 
                 recs_fetched += len(df)
-                if not debug_dataframes:
-                    print(df.dtypes)
-                    df[f"ds_{dataset_id}_{idx}"] = None
-                    print(
-                        tabulate(
-                            df.head(20),
-                            headers="keys",
-                            tablefmt="psql",
-                        )
-                    )
+                debug_pandas_df(df, f"pulled_dataset_{dataset_id}_idx_{idx}")
 
                 __write_to_parquet(df, output_dir_path, idx)
 

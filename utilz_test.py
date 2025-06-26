@@ -1,6 +1,11 @@
 import datetime
 
-from utilz import get_is_yes_no, get_output_path, parse_damage, was_airbag_deployed
+from utilz import (  # noqa: E501
+    get_is_yes_no,
+    get_output_path,
+    parse_damage,
+    was_airbag_deployed,
+)
 
 
 def test_get_output_path():
@@ -38,8 +43,14 @@ def test_parse_damage():
         501,
         1500,
     ), "Parsing failed for '$501 - $1,500'"
-    assert parse_damage("$500 OR LESS") == (1, 500), "Parsing failed for '$500 OR LESS'"
-    assert parse_damage("$500") == (500, 500), "Parsing failed for '$500 OR LESS'"
+    assert parse_damage("$500 OR LESS") == (
+        1,
+        500,
+    ), "Parsing failed for '$500 OR LESS'"  # noqa: E501
+    assert parse_damage("$500") == (
+        500,
+        500,
+    ), "Parsing failed for '$500 OR LESS'"  # noqa: E501
     assert parse_damage(None) == (None, None), "Parsing failed for None"
     assert parse_damage("UNKNOWN FORMAT") == (
         None,
@@ -66,8 +77,12 @@ def test_is_airbag_deployed():
     """
     Test the is_airbag_deployed function.
     """
-    assert was_airbag_deployed("DEPLOYED") is True, "Parsing failed for 'DEPLOYED'"
-    assert was_airbag_deployed("DePLOYED") is True, "Parsing failed for 'DEPLOYED'"
+    assert (
+        was_airbag_deployed("DEPLOYED") is True
+    ), "Parsing failed for 'DEPLOYED'"  # noqa: E501
+    assert (
+        was_airbag_deployed("DePLOYED") is True
+    ), "Parsing failed for 'DEPLOYED'"  # noqa: E501
     assert (
         was_airbag_deployed("DID not DEPLOY") is False
     ), "Parsing failed for 'DID NOT DEPLOY'"

@@ -11,7 +11,12 @@ from pyspark.sql.types import (
     TimestampType,
 )
 
-from utilz import get_damage_estimate, get_is_yes_no, is_am, was_airbag_deployed
+from utilz import (  # noqa: E501
+    get_damage_estimate,
+    get_is_yes_no,
+    is_am,
+    was_airbag_deployed,
+)
 
 # Define UDF to get damage estimate
 get_damage_udf = udf(get_damage_estimate, IntegerType())
@@ -89,12 +94,16 @@ def basic_transform(df, schema: dict[str, str], timezone="America/Chicago"):
     :return: df
     """
     logging.info("applying base transformation")
-    columns_with_i = [key.lower() for key in schema if key.lower().endswith("_i")]
+    columns_with_i = [
+        key.lower() for key in schema if key.lower().endswith("_i")
+    ]  # noqa: E501
 
     # example: ['crash_intersection_related_i', 'crash_hit_and_run_i']
     for boolean_column in columns_with_i:
         if boolean_column in df.columns:
-            df = df.withColumnRenamed(boolean_column, f"{boolean_column}_original")
+            df = df.withColumnRenamed(
+                boolean_column, f"{boolean_column}_original"
+            )  # noqa: E501
             df = df.withColumn(
                 boolean_column, is_yes_no(df[f"{boolean_column}_original"])
             )
@@ -112,14 +121,18 @@ def transform_crashes(df, schema: dict[str, str], timezone="America/Chicago"):
     :return: df
     """
     logging.info(
-        "transforming crashes data using timezone: %s and schema: %s", timezone, schema
+        "transforming crashes data using timezone: %s and schema: %s",
+        timezone,
+        schema,  # noqa: E501
     )
     df = basic_transform(df, schema, timezone)
     df = df.withColumn("damage_estimate", get_damage_udf(df["damage"]))
     return df.withColumn("is_am", is_am(df["crash_date"]))
 
 
-def transform_crashes_people(df, schema: dict[str, str], timezone="America/Chicago"):
+def transform_crashes_people(
+    df, schema: dict[str, str], timezone="America/Chicago"
+):  # noqa: E501
     """
     Transform the crashes_people data by applying basic transformations  # noqa: E501
     :param df:
@@ -140,12 +153,16 @@ def transform_crashes_people(df, schema: dict[str, str], timezone="America/Chica
         )
     if "cell_phone_use" in df.columns:
         df = df.withColumnRenamed("cell_phone_use", "cell_phone_use_txt")
-        df = df.withColumn("cell_phone_use", is_yes_no(df["cell_phone_use_txt"]))
+        df = df.withColumn(
+            "cell_phone_use", is_yes_no(df["cell_phone_use_txt"])
+        )  # noqa: E501
     df = basic_transform(df, schema, timezone)
     return df
 
 
-def transform_crashes_vehicles(df, schema: dict[str, str], timezone="America/Chicago"):
+def transform_crashes_vehicles(
+    df, schema: dict[str, str], timezone="America/Chicago"
+):  # noqa: E501
     """
     Transform the crashes_vehicles data by applying basic transformations  # noqa: E501
     :param df:

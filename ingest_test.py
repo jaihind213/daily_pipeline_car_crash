@@ -8,7 +8,9 @@ from puller import pull_chicago_dataset
 from utilz import get_output_path
 
 os.environ["TZ"] = "GMT"
-iceberg_jar = "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.8.1"
+# iceberg_jar = "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.8.1"
+# iceberg_jar = "org.apache.iceberg:iceberg-spark-runtime-3.5_2.13:1.9.0"
+iceberg_jar = "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.8.1,io.github.jaihind213:spark-set-udaf:spark3.5.2-scala2.13-1.0.1-jdk11"
 
 
 def test_ingest_crashes_table():
@@ -24,15 +26,20 @@ def test_ingest_crashes_table():
 
     spark = (
         SparkSession.builder.appName("insert_into_iceberg")
-        .config(f"spark.sql.catalog.{catalog}", "org.apache.iceberg.spark.SparkCatalog")
+        .config(
+            f"spark.sql.catalog.{catalog}",
+            "org.apache.iceberg.spark.SparkCatalog",  # noqa: E501
+        )
         .config(
             "spark.sql.extensions",
-            "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions",
+            "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions",  # noqa: E501
         )
         .config("spark.sql.parquet.timestampNTZ.enabled", "true")
         .config("spark.sql.legacy.parquet.nanosAsLong", "true")
         .config(f"spark.sql.catalog.{catalog}.type", "hadoop")
-        .config(f"spark.sql.catalog.{catalog}.warehouse", "file:///tmp/warehouse")
+        .config(
+            f"spark.sql.catalog.{catalog}.warehouse", "file:///tmp/warehouse"
+        )  # noqa: E501
         .config("spark.jars.packages", iceberg_jar)
         .config("spark.sql.session.timeZone", "GMT")
         .getOrCreate()
@@ -86,7 +93,7 @@ def test_ingest_crashes_table():
 
     # validate 1 record to see if we pulled correctly
     df = spark.sql(
-        f"select * from local.test.crashes where crash_record_id='{crash_record_id}'"
+        f"select * from local.test.crashes where crash_record_id='{crash_record_id}'"  # noqa: E501
     )
     row = df.collect()[0]
 
@@ -191,3 +198,59 @@ def test_ingest_crashes_table():
     assert abs(row["longitude"] + 87.6453278635) < 1e-9
     # 48
     assert row["location"] == "{[-87.64532786346, 41.885801756029], Point}"
+
+
+def test_udf():
+    """
+    Test the ingest_to_iceberg function.
+    """
+    # Setup
+    catalog = "local"
+
+    spark = (
+        SparkSession.builder.appName("insert_into_iceberg")
+        .config(
+            f"spark.sql.catalog.{catalog}", "org.apache.iceberg.spark.SparkCatalog"
+        )  # noqa: E501
+        .config(
+            "spark.sql.extensions",
+            "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions",  # noqa: E501
+        )
+        .config("spark.sql.parquet.timestampNTZ.enabled", "true")
+        .config("spark.sql.legacy.parquet.nanosAsLong", "true")
+        .config(f"spark.sql.catalog.{catalog}.type", "hadoop")
+        .config(
+            f"spark.sql.catalog.{catalog}.warehouse", "file:///tmp/warehouse"
+        )  # noqa: E501
+        .config("spark.jars.packages", iceberg_jar)
+        # .config("spark.jars", jar)
+        .config("spark.driver.extraClassPath", jar)
+        .config("spark.executor.extraClassPath", jar)
+        .config("spark.sql.session.timeZone", "GMT")
+        .config(
+            "spark.driver.extraJavaOptions",
+            "-Duser.timezone=GMT  -Dfile.encoding=UTF-8 --illegal-access=permit --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED --add-exports java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-opens java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-opens=java.base/sun.util.calendar=ALL-UNNAMED --add-opens java.base/java.lang.invoke=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED -XX:+UseG1GC",  # noqa: E501
+        )
+        .config(
+            "spark.executor.extraJavaOptions",
+            "-Duser.timezone=GMT  -Dfile.encoding=UTF-8 --illegal-access=permit --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED --add-exports java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-opens java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-opens=java.base/sun.util.calendar=ALL-UNNAMED --add-opens java.base/java.lang.invoke=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED -XX:+UseG1GC",  # noqa: E501
+        )
+        .getOrCreate()
+    )
+
+    jvm = spark._jvm
+    print(jvm.io.github.jaihind213.SetAggregator)
+
+    # Access JVM
+    jvm = spark._jvm
+    jvm_spark = spark._jsparkSession
+    jvm.io.github.jaihind213.SetAggregator.register(jvm_spark, 4096, 9001)
+
+    # create df with random string data
+    df = spark.createDataFrame([("a",), ("b",), ("c",)], ["col1"])
+    df.createOrReplaceTempView("foo")
+    spark.sql(
+        "select estimate_set(set_sketch(col1)) as estimate_set from foo"
+    ).show(  # noqa: E501
+        truncate=False
+    )

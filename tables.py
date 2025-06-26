@@ -175,8 +175,139 @@ USING iceberg
     );
 """
 
+test_ddl = """
+CREATE TABLE %s.%s.one (
+    id              string,
+    crash_date      timestamp
+)
+USING iceberg
+    PARTITIONED BY (
+        days(crash_date)     -- Partition by day
+    );
+"""
+
+test1_ddl = """
+CREATE TABLE %s.%s.two (
+    id              string,
+    crash_date      timestamp
+)
+USING iceberg
+    PARTITIONED BY (
+        days(crash_date)     -- Partition by day
+    );
+"""
+
+crashes_ppl_summary_ddl = """
+CREATE TABLE %s.%s.crashes_people_summary (
+    crash_date timestamp,
+    crash_record_id STRING,
+    is_am boolean,
+    damage int,
+    number_injured INT,
+    number_fatal INT,
+    weather_condition STRING,
+    lighting_condition STRING,
+    is_hit_run BOOLEAN,
+    street_name STRING,
+    lat DOUBLE,
+    lon DOUBLE,
+    road_defect STRING,
+    is_cell_phone_use BOOLEAN,
+    is_drunk BOOLEAN,
+    list_of_hospital ARRAY<STRING>,
+    list_of_gender ARRAY<STRING>,
+    is_age_below_5 BOOLEAN,
+    is_age_10s BOOLEAN,
+    is_age_20s BOOLEAN,
+    is_age_30s BOOLEAN,
+    is_age_40s BOOLEAN,
+    is_age_50s BOOLEAN,
+    is_age_senior BOOLEAN,
+    list_of_airbag_deployed ARRAY<STRING>
+)
+USING iceberg
+PARTITIONED BY (days(crash_date));
+"""
+
+crashes_ppl_vehicle_summary_ddl = """
+CREATE TABLE %s.%s.crashes_people_vehicle_summary (
+    crash_date timestamp,
+    crash_record_id STRING,
+    is_am boolean,
+    damage int,
+    number_injured INT,
+    number_fatal INT,
+    weather_condition STRING,
+    lighting_condition STRING,
+    is_hit_run BOOLEAN,
+    street_name STRING,
+    lat DOUBLE,
+    lon DOUBLE,
+    road_defect STRING,
+    is_cell_phone_use BOOLEAN,
+    is_drunk BOOLEAN,
+    list_of_hospital ARRAY<STRING>,
+    list_of_gender ARRAY<STRING>,
+    is_age_below_5 BOOLEAN,
+    is_age_10s BOOLEAN,
+    is_age_20s BOOLEAN,
+    is_age_30s BOOLEAN,
+    is_age_40s BOOLEAN,
+    is_age_50s BOOLEAN,
+    is_age_senior BOOLEAN,
+    list_of_airbag_deployed ARRAY<STRING>,
+    vehicle_uses ARRAY<STRING>,
+    vehicle_makes ARRAY<STRING>,
+    fire_happened BOOLEAN,
+    hazmat_involved BOOLEAN,
+    num_people_involved INT
+)
+USING iceberg
+PARTITIONED BY (days(crash_date));
+"""
+
+crashes_cube_ddl = """
+CREATE TABLE %s.%s.crashes_cube (
+    crash_day date,
+    is_am boolean,
+    total_damage int,
+    total_injured INT,
+    total_fatal INT,
+    weather_condition STRING,
+    lighting_condition STRING,
+    is_hit_run BOOLEAN,
+    street_name STRING,
+    lat DOUBLE,
+    lon DOUBLE,
+    road_defect STRING,
+    is_cell_phone_use BOOLEAN,
+    is_drunk BOOLEAN,
+    list_of_hospital ARRAY<STRING>,
+    list_of_gender ARRAY<STRING>,
+    is_age_below_5 BOOLEAN,
+    is_age_10s BOOLEAN,
+    is_age_20s BOOLEAN,
+    is_age_30s BOOLEAN,
+    is_age_40s BOOLEAN,
+    is_age_50s BOOLEAN,
+    is_age_senior BOOLEAN,
+    list_of_airbag_deployed ARRAY<STRING>,
+    vehicle_uses ARRAY<STRING>,
+    vehicle_makes ARRAY<STRING>,
+    fire_happened BOOLEAN,
+    hazmat_involved BOOLEAN,
+    total_people_involved INT,
+    crashes_set_sketch BINARY
+)
+USING iceberg
+PARTITIONED BY (days(crash_day));
+"""
+
 tables_ddl = {
     "crashes": crashes_ddl,
     "crashes_people": crashes_people_ddl,
     "crashes_vehicles": crashes_vehicles_ddl,
+    "crashes_people_summary": crashes_ppl_summary_ddl,
+    "crashes_people_vehicle_summary": crashes_ppl_vehicle_summary_ddl,
+    "crashes_cube": crashes_cube_ddl,
 }
