@@ -10,7 +10,7 @@ from utilz import get_output_path
 os.environ["TZ"] = "GMT"
 # iceberg_jar = "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.8.1"
 # iceberg_jar = "org.apache.iceberg:iceberg-spark-runtime-3.5_2.13:1.9.0"
-iceberg_jar = "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.8.1,io.github.jaihind213:spark-set-udaf:spark3.5.2-scala2.13-1.0.1-jdk11"
+iceberg_jar = "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.8.1,io.github.jaihind213:spark-set-udaf:spark3.5.2-scala2.13-1.0.1-jdk11"  # noqa: E501
 
 
 def test_ingest_crashes_table():
@@ -224,8 +224,8 @@ def test_udf():
         )  # noqa: E501
         .config("spark.jars.packages", iceberg_jar)
         # .config("spark.jars", jar)
-        .config("spark.driver.extraClassPath", jar)
-        .config("spark.executor.extraClassPath", jar)
+        # .config("spark.driver.extraClassPath", jar)
+        # .config("spark.executor.extraClassPath", jar)
         .config("spark.sql.session.timeZone", "GMT")
         .config(
             "spark.driver.extraJavaOptions",
