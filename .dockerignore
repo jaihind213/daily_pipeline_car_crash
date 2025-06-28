@@ -4,6 +4,8 @@ pyproject.toml
 README.md
 Dockerfile
 .dockerignore
+__pycache__
+test.ini
 .git*
 .idea
 data
