@@ -1,6 +1,7 @@
 import configparser
 import logging
 import os
+import re
 
 job_config = configparser.SafeConfigParser()
 logger = logging.getLogger(__name__)
@@ -18,6 +19,22 @@ def load_config(config_file_path):
     print("loading config from", config_file_path)
     with open(config_file_path) as cf:
         job_config.read_file(cf)
+    # Replace environment variable placeholders with actual values
+    env_var_pattern = re.compile(r"^\$\{([^:}]+)(?::([^}]*))?\}$")
+
+    # Iterate through all sections and keys
+    for section in job_config.sections():
+        for key in job_config[section]:
+            value = job_config[section][key]
+            match = env_var_pattern.match(value)
+            if match:
+                env_var_name = match.group(1)
+                logging.info(
+                    f"Replacing config parameter: {section}.{key} with environment variable: {env_var_name}"
+                )
+                default_value = match.group(2) if match.group(2) is not None else ""
+                env_var_value = os.getenv(env_var_name, default_value)
+                job_config[section][key] = env_var_value
 
 
 def get_config():
