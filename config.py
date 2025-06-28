@@ -30,7 +30,7 @@ def load_config(config_file_path):
             if match:
                 env_var_name = match.group(1)
                 logging.info(
-                    f"Replacing config parameter: {section}.{key} with environment variable: {env_var_name}"
+                    f"Replacing config parameter: {section}.{key} with environment variable: {env_var_name}"  # noqa: E501
                 )
                 default_value = match.group(2) if match.group(2) is not None else ""
                 env_var_value = os.getenv(env_var_name, default_value)
