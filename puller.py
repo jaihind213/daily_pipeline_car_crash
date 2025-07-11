@@ -1,11 +1,12 @@
 import logging
 import os
-import pandas as pd
-import pytz
-import s3fs
 import shutil
 import time
 from datetime import datetime
+
+import pandas as pd
+import pytz
+import s3fs
 from sodapy import Socrata
 
 from utilz import debug_pandas_df

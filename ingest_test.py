@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+
 from pyspark.sql import SparkSession
 
 from ingest import ingest_to_iceberg

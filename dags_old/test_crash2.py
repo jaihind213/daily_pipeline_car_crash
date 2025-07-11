@@ -2,6 +2,7 @@ import logging
 import os
 from datetime import datetime
 
+import dag_util as du
 import yaml
 from airflow import DAG
 from airflow.models import Param
@@ -13,7 +14,6 @@ from airflow.providers.cncf.kubernetes.operators.spark_kubernetes import (
 from airflow.providers.cncf.kubernetes.utils.pod_manager import OnFinishAction
 from kubernetes import client
 from kubernetes.client import models as k8s
-import dag_util as du
 
 
 def get_specific_env_from_secret(var_name, secret_name):
@@ -83,12 +83,20 @@ def create_spark_app_file(
             "sparkVersion": spark_config.get("spark_version", "3.5.2"),
             "restartPolicy": {"type": "Never"},
             "sparkConf": {
-                "spark.sql.extensions": "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions",
-                "spark.sql.catalog.spark_catalog": "org.apache.iceberg.spark.SparkSessionCatalog",
-                "spark.jar.packages": "org.apache.iceberg:iceberg-spark-runtime-3.5_2.13:1.8.1,io.github.jaihind213:spark-set-udaf:spark3.5.2-scala2.13-1.0.1-jdk11,org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.367",
+                "spark.sql.extensions": (
+                    "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions"
+                ),
+                "spark.sql.catalog.spark_catalog": (
+                    "org.apache.iceberg.spark.SparkSessionCatalog"
+                ),
+                "spark.jar.packages": (
+                    "org.apache.iceberg:iceberg-spark-runtime-3.5_2.13:1.8.1,io.github.jaihind213:spark-set-udaf:spark3.5.2-scala2.13-1.0.1-jdk11,org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.367"
+                ),
                 "spark.sql.catalog.local": "org.apache.iceberg.spark.SparkCatalog",
                 "spark.sql.catalog.local.type": "hadoop",
-                "spark.sql.catalog.local.warehouse": "file:///opt/daily_pipeline_car_crash/data/iceberg_crashes",
+                "spark.sql.catalog.local.warehouse": (
+                    "file:///opt/daily_pipeline_car_crash/data/iceberg_crashes"
+                ),
                 "spark.driver.extraClassPath": "/opt/spark_jars/*",
                 "spark.executor.extraClassPath": "/opt/spark_jars/*",
                 # "spark.hadoop.fs.s3a.access.key": get_specific_env_from_secret("S3_ACCESS_KEY", secret_name),
@@ -162,7 +170,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id="test_crash_1",
+    dag_id="test_crash_2",
     default_args=default_args,
     description="Runs daily car crash pipeline with config and date using Spark on Kubernetes",
     schedule_interval="@daily",
@@ -213,46 +221,32 @@ with DAG(
         on_finish_action=OnFinishAction.KEEP_POD,
         volumes=[common_config_volume],
         volume_mounts=[common_config_volume_mount],
+        startup_timeout_seconds=600,
     )
 
     # # Create application files
-    # ingest_job_app_file = create_spark_app_file(
-    #     "ingest-job-config-map",
-    #     "ingest_job.py",
-    #     spark_config,
-    #     secret_name="car-crash-secret",
-    # )
-    #
-    # pod_override = {
-    #     "spec": {
-    #         "volumes": [
-    #             {"name": "config-volume", "configMap": {"name": "job-config-map"}}
-    #         ],
-    #         "containers": [
-    #             {
-    #                 "name": "spark-kubernetes-driver",
-    #                 "volumeMounts": [
-    #                     {
-    #                         "name": "config-volume",
-    #                         "mountPath": "/opt/daily_pipeline_car_crash/config",
-    #                         "readOnly": True,
-    #                     }
-    #                 ],
-    #             }
-    #         ],
-    #     }
-    # }
-    # # Task A - Pull data using Spark
-    # ingest_job = SparkKubernetesOperator(
-    #     task_id="ingest_data",
-    #     namespace="airflow",
-    #     application_file=ingest_job_app_file,
-    #     kubernetes_conn_id="kubernetes_default",
-    #     do_xcom_push=False,
-    #     pod_override=pod_override,
-    # )
+    ingest_job_main_file = "local:///opt/daily_pipeline_car_crash/ingest_job.py"
+    ingest_job_args = [
+        "/opt/daily_pipeline_car_crash/config/default_job_config.ini",
+        "{{ params.date }}",
+    ]
+    ingest_job_spark_config = get_spark_config("ingest-job-config-map")
+    ingest_job_app_file = du.create_py_spark_operator_app_file(
+        "ingest_iceberg",
+        ingest_job_main_file,
+        ingest_job_args,
+        ingest_job_spark_config,
+        image_tag,
+        "car-crash-secret",
+        "ingest-job-config-map",
+        "/opt/daily_pipeline_car_crash/config",
+    )
+    ingest_job = SparkKubernetesOperator(
+        task_id="ingest_iceberg",
+        namespace="airflow",
+        application_file=ingest_job_app_file,
+        kubernetes_conn_id="kubernetes_default",
+        do_xcom_push=False,
+    )
 
-    # Define task dependencies: a > b > c
-    #pull_data >> ingest_job
-    pull_data
-
+    pull_data >> ingest_job

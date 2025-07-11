@@ -1,10 +1,11 @@
 import datetime
 import os
 import re
+from typing import Tuple
+
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from tabulate import tabulate
-from typing import Tuple
 
 
 def get_output_path(path_prefix, date: datetime.date):
