@@ -1,11 +1,10 @@
 import datetime
 import os
 import re
-from typing import Tuple
-
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from tabulate import tabulate
+from typing import Tuple
 
 
 def get_output_path(path_prefix, date: datetime.date):
@@ -142,9 +141,16 @@ def get_spark_session(config, app_name):
     spark = builder.getOrCreate()
 
     # Register the set sketch UDFs
-    jvm = spark._jvm
-    jvm_spark = spark._jsparkSession
-    jvm.io.github.jaihind213.SetAggregator.register(jvm_spark, 4096, 9001)
+    try:
+        jvm = spark._jvm
+        jvm_spark = spark._jsparkSession
+        jvm.io.github.jaihind213.SetAggregator.register(jvm_spark, 4096, 9001)
+    except Exception as e:
+        print(f"Failed to register set sketch UDFs: {e}")
+        import traceback
+
+        traceback.print_exc()
+
     return spark
 
 
@@ -155,7 +161,7 @@ def debug_dataframes(spark_df, name):
     :param name: Name of the DataFrame for logging
     :param spark: Spark session
     """
-    if not os.environ.get("DEBUG_DATAFRAMES", "true").lower() == "true":
+    if not os.environ.get("DEBUG_DATAFRAMES", "false").lower() == "true":
         return
 
     if not spark_df:
@@ -172,7 +178,7 @@ def debug_pandas_df(df, name):
     :param df:
     :param name: name of df
     """
-    if not os.environ.get("DEBUG_DATAFRAMES", "true").lower() == "true":
+    if not os.environ.get("DEBUG_DATAFRAMES", "false").lower() == "true":
         return
 
     if df is None:

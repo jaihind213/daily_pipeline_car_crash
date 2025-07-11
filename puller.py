@@ -1,11 +1,11 @@
 import logging
 import os
+import pandas as pd
+import pytz
+import s3fs
 import shutil
 import time
 from datetime import datetime
-
-import pandas as pd
-import pytz
 from sodapy import Socrata
 
 from utilz import debug_pandas_df
@@ -13,19 +13,34 @@ from utilz import debug_pandas_df
 os.environ["TZ"] = "GMT"
 
 
-def __write_to_parquet(pandas_df, path, file_idx):
+def __write_to_parquet(pandas_df, path, file_idx, job_config):
     if path.startswith("/") or path.startswith("file://"):  # noqa: E501
         if file_idx == 0:
             shutil.rmtree(path, ignore_errors=True)
         os.makedirs(path, exist_ok=True)
 
     now = datetime.now(pytz.timezone("UTC"))
-    pandas_df.to_parquet(
-        path + f"/output{file_idx}_{now.timestamp()}.parquet",
-        engine="pyarrow",
-        index=True,
-        compression="snappy",
-    )
+    if path.startswith("s3"):
+        s3_endpoint_url = job_config["job"]["blob_storage_endpoint_url"]
+        fs = s3fs.S3FileSystem(
+            key=os.getenv("S3_ACCESS_KEY"),
+            secret=os.getenv("S3_SECRET_KEY"),
+            client_kwargs={"endpoint_url": s3_endpoint_url},
+        )
+        pandas_df.to_parquet(
+            path + f"/output{file_idx}_{now.timestamp()}.parquet",
+            engine="pyarrow",
+            index=True,
+            compression="snappy",
+            filesystem=fs,
+        )
+    else:
+        pandas_df.to_parquet(
+            path + f"/output{file_idx}_{now.timestamp()}.parquet",
+            engine="pyarrow",
+            index=True,
+            compression="snappy",
+        )
 
 
 def pull_chicago_dataset(
@@ -35,6 +50,7 @@ def pull_chicago_dataset(
     for_day: int,
     time_filter_column: str,
     output_dir_path: str,
+    job_config,
     app_token=None,
     username=None,
     password=None,
@@ -99,7 +115,7 @@ def pull_chicago_dataset(
                 recs_fetched += len(df)
                 debug_pandas_df(df, f"pulled_dataset_{dataset_id}_idx_{idx}")
 
-                __write_to_parquet(df, output_dir_path, idx)
+                __write_to_parquet(df, output_dir_path, idx, job_config)
 
                 idx += 1
                 logging.info(

@@ -1,6 +1,5 @@
-from datetime import datetime, timedelta
-
 import pytz
+from datetime import datetime, timedelta
 
 
 def get_default_job_date(tz="America/Chicago") -> datetime.date:

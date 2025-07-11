@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import sys
 import traceback
 from datetime import datetime
@@ -47,9 +46,12 @@ def __pull_data(pull_date: datetime.date, konfig) -> dict[str:int]:
             pull_date.day,
             time_column,
             path_to_save,
-            app_token=os.environ.get("SOCRATA_APP_TOKEN"),
-            username=os.environ.get("SOCRATA_USERNAME"),
-            password=os.environ.get("SOCRATA_PASSWORD"),
+            konfig,
+            app_token=konfig.get(
+                "pull_job", "socrata_token", fallback="configure_token"
+            ),
+            username=konfig.get("pull_job", "socrata_username", fallback=""),
+            password=konfig.get("pull_job", "socrata_password", fallback=""),
             timeout_sec=timeout_sec,
             batch_size=batch_size,
             sleep_time_millis=sleep_time_millis,

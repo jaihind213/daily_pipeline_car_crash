@@ -1,7 +1,6 @@
 import configparser
-from datetime import datetime, timedelta
-
 import pytz
+from datetime import datetime, timedelta
 
 from date_util import get_default_job_date, get_job_date
 

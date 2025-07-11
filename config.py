@@ -3,14 +3,14 @@ import logging
 import os
 import re
 
-job_config = configparser.SafeConfigParser()
+job_config = configparser.ConfigParser()
 logger = logging.getLogger(__name__)
 
 
 def configure_logging():
     log_level = job_config.get("logging", "log_level", fallback="info")
     # set default loglevel
-    logging.basicConfig(level=logging._nameToLevel[log_level.upper()])
+    logging.basicConfig(level=logging._nameToLevel[log_level.upper()], force=True)
 
 
 def load_config(config_file_path):
@@ -44,3 +44,4 @@ def get_config():
 def setup(config_file_path):
     load_config(config_file_path)
     configure_logging()
+    logging.info("Configuration loaded successfully from %s", config_file_path)

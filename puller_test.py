@@ -1,7 +1,6 @@
+import duckdb
 import os
 import shutil
-
-import duckdb
 
 from puller import pull_chicago_dataset
 

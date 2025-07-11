@@ -5,7 +5,9 @@ README.md
 Dockerfile
 .dockerignore
 __pycache__
+download_spark_deps.sh
 test.ini
 .git*
 .idea
 data
+foo

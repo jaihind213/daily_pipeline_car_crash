@@ -33,9 +33,9 @@ if __name__ == "__main__":
     catalog_name = config["iceberg"]["catalog_name"]
     catalog_db = config["iceberg"]["db"]
 
-    try:
-        with utilz.get_spark_session(config, "ingestor") as spark:
-            for table_name, ds_conf in datasets_map.items():
+    with utilz.get_spark_session(config, "ingestor") as spark:
+        for table_name, ds_conf in datasets_map.items():
+            try:
                 id = ds_conf["id"]
                 path_to_read = get_output_path(
                     output_path_prefix + "/" + table_name, job_date
@@ -63,14 +63,14 @@ if __name__ == "__main__":
                     successful=True,
                     metrics=None,
                 )
-    except Exception as e:
-        logger.error("Error during ingestion: %s", str(e))
-        traceback.print_exc()
-        report_job_stats(
-            "ingest_" + table_name,
-            job_date,
-            job_start_time,
-            datetime.now(),
-            successful=False,
-        )
-        sys.exit(1)
+            except Exception as e:
+                logger.error("Error during ingestion: %s", str(e))
+                traceback.print_exc()
+                report_job_stats(
+                    "ingest_" + table_name,
+                    job_date,
+                    job_start_time,
+                    datetime.now(),
+                    successful=False,
+                )
+                sys.exit(1)
