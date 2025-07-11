@@ -55,6 +55,7 @@ def test_ingest_crashes_table():
         for_day=job_date.day,
         time_filter_column="crash_date",
         output_dir_path=get_output_path(data_dir + "/" + table_name, job_date),
+        job_config=None,
         app_token=os.environ.get("SOCRATA_APP_TOKEN"),
         username=None,
         password=None,
