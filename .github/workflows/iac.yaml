@@ -106,4 +106,4 @@ jobs:
               airflow_values_template.yaml > airflow_values.yaml
           helm repo add apache-airflow https://airflow.apache.org || echo "airflow repo added"
           helm repo update
-          helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml
+          helm upgrade --install airflow apache-airflow/airflow -n airflow --wait --timeout 10m --create-namespace -f airflow_values.yaml
