@@ -1,0 +1,45 @@
+name: Infra as Code on Digital Ocean
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          cd infra-as-code
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v4
+        with:
+          pulumi-version: latest
+
+      - name: Login to Pulumi
+        run: pulumi login
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+      - name: Set up Pulumi stack
+        run: |
+          cd infra-as-code
+          pulumi stack select prod || pulumi stack init prod
+          pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
+
+      - name: Deploy with Pulumi
+        run: pulumi up --yes

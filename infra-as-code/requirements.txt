@@ -1,0 +1,2 @@
+pulumi==3.181.0
+pulumi-digitalocean==3.0.2
