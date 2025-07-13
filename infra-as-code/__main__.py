@@ -11,7 +11,7 @@ project_name = "first-project"
 cluster_name = "k8s-1-33-1-do-1-sgp1-1752378431833"
 version = "1.33.1-do.1"
 pool_name = "pool-l7g14a0wb"
-tags = ["k8s", "testing"]
+tags = ["k8s", "testing", project_name]
 node_size= "s-2vcpu-4gb"
 num_nodes=3
 
@@ -28,14 +28,12 @@ def create_k8s_cluster(cluster_name, region,version,tags, pool_name, node_size, 
             name=pool_name,
             size=node_size,
             node_count=num_nodes,
-        ),
-        project_id=project_name,  # Optional; project_id is not project name. You might need to fetch via API.
+        )
     )
     pulumi.export("k8s_cluster_id", cluster.id)
 
 
 try:
-    # This runs at runtime, so try/except works!
     existing_cluster = do.get_kubernetes_cluster(name=cluster_name)
     pulumi.export("k8s_cluster_id", existing_cluster.id)
 except Exception as e:
