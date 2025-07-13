@@ -33,7 +33,6 @@ def create_k8s_cluster(
     )
     return cluster.id, cluster.cluster_urn
 
-#existing_cluster = do.get_kubernetes_cluster(name=cluster_name)
 
 cluster_id, cluster_urn = create_k8s_cluster(
     cluster_name, region, version, tags, pool_name, node_size, num_nodes, project_name
