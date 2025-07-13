@@ -35,7 +35,7 @@ try:
     # This runs at runtime, so try/except works!
     existing_cluster = do.get_kubernetes_cluster(name=cluster_name)
     pulumi.export("k8s_cluster_id", existing_cluster.id)
-except InvokeError:
+except Exception:
     pulumi.log.warn(f"Cluster '{cluster_name}' does not exist — will create it.")
     traceback.print_exc()
 #
