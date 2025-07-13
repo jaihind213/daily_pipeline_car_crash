@@ -1,3 +1,5 @@
+import logging
+
 import pulumi
 import pulumi_digitalocean as do
 import traceback
@@ -14,7 +16,8 @@ node_size= "s-2vcpu-4gb"
 num_nodes=3
 
 
-def create_k8s_cluster():
+def create_k8s_cluster(cluster_name, region,version,tags, pool_name, node_size, num_nodes, project_name):
+    logging.info(f"creating k8s cluster with name: {cluster_name}, region: {region}, project_name:{project_name}")
     cluster = do.KubernetesCluster(
         resource_name=cluster_name,
         name=cluster_name,
@@ -36,9 +39,11 @@ try:
     existing_cluster = do.get_kubernetes_cluster(name=cluster_name)
     pulumi.export("k8s_cluster_id", existing_cluster.id)
 except Exception as e:
-    traceback.print_exc()
     if "Unable to find cluster with name" in str(e):
         pulumi.log.warn(f"**** Cluster '{cluster_name}' does not exist — will create it.")
+        create_k8s_cluster(cluster_name, region, version, tags, pool_name, node_size, num_nodes, project_name)
+    else:
+        traceback.print_exc()
 #
 # try:
 #     cluster = do.KubernetesCluster.get("existing-cluster", cluster_name, opts=pulumi.ResourceOptions())
