@@ -93,7 +93,7 @@ jobs:
           sleep 90
           kubectl get pods -A | grep sealed-secrets || echo "tried to get pods"
           kubectl create secret generic git-credentials --namespace airflow  --dry-run=client --from-literal=GIT_SYNC_USERNAME='${{ secrets.GIT_SYNC_USERNAME }}' --from-literal=GITSYNC_USERNAME='${{ secrets.GIT_SYNC_USERNAME }}' --from-literal=GIT_SYNC_PASSWORD='${{ secrets.GIT_SYNC_PASSWORD }}' --from-literal=GITSYNC_PASSWORD='${{ secrets.GIT_SYNC_PASSWORD }}' --from-literal=password=LOL -o json | kubeseal --namespace airflow --controller-namespace=sealed-secrets --scope=strict --format=yaml > my-secret-sealed.yaml
-          kubectl apply -f my-sealed-secret.yaml -n airflow
+          kubectl apply -f my-secret-sealed.yaml -n airflow
       - name: 🌀༄ setup
         run: |
           cd infra-as-code/airflow
