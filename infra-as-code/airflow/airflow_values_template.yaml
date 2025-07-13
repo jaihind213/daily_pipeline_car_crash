@@ -480,7 +480,7 @@ data:
   # Otherwise pass connection values in
   metadataConnection:
     user: postgres
-    pass: postgres
+    pass: __PGKEY__
     protocol: postgresql
     host: ~
     port: 5432
@@ -1504,7 +1504,7 @@ webserver:
     email: __EMAIL__
     firstName: __FIRST_NAME__
     lastName: __LAST_NAME__
-    password: __KEY_
+    password: __KEY__
 
   # Launch additional containers into webserver (templated).
   extraContainers: []
@@ -2636,11 +2636,12 @@ cleanup:
 
 # Configuration for postgresql subchart
 # Not recommended for production
+#changed
 postgresql:
   enabled: true
   auth:
     enablePostgresUser: true
-    postgresPassword: postgres
+    postgresPassword: __PGKEY__
     username: ""
     password: ""
 

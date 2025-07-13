@@ -101,6 +101,7 @@ jobs:
               -e "s|__KEY__|${{ secrets.AF_KEY }}|g" \
               -e "s|__EMAIL__|${{ secrets.AF_EMAIL }}|g" \
               -e "s|__FIRST_NAME__|${{ secrets.AF_FN }}|g" \
+              -e "s|__PGKEY__|${{ secrets.PGKEY }}|g" \
               -e "s|__LAST_NAME__|${{ secrets.AF_LN }}|g" \
               airflow_values_template.yaml > airflow_values.yaml
           helm repo add apache-airflow https://airflow.apache.org || echo "airflow repo added"
