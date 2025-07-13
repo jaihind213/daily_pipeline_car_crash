@@ -19,7 +19,6 @@ COPY ./spark_jars /opt/spark_jars/
 
 # Copy project files
 COPY *.py /opt/daily_pipeline_car_crash
-#COPY requirements.txt /opt/daily_pipeline_car_crash
 
 # Install Python dependencies
 RUN python3 -m pip config set global.break-system-packages true \
