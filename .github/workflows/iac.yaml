@@ -6,6 +6,8 @@ on:
       - dev
   workflow_dispatch:
 
+env:
+  K8S_BOOTUP_TIME_SEC: 300
 jobs:
   setup_infra:
     runs-on: ubuntu-latest
@@ -13,6 +15,11 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DO_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -45,3 +52,20 @@ jobs:
         run: |
           cd infra-as-code
           pulumi up --yes
+          echo "K8S_CLUSTER_ID=$(pulumi stack output k8s_cluster_id)" >> $GITHUB_ENV
+      - name: Save DigitalOcean kubeconfig
+        run: |
+          cd infra-as-code
+          doctl kubernetes cluster kubeconfig save ${{ env.K8S_CLUSTER_ID }}
+      - name: Check if k8s nodes ready
+        run: |
+          echo "lets wait for some time to allow nodes be ready..."
+          sleep ${{ env.K8S_BOOTUP_TIME_SEC }}
+          export NOT_READY_NODES=$(kubectl get nodes --no-headers | awk '$2 != "Ready"')
+          if [ -n "$NOT_READY_NODES" ]; then
+            echo "❌ Some nodes are NotReady:"
+            echo "$NOT_READY_NODES"
+            exit 1
+          else
+            echo "✅ All nodes are Ready."
+          fi
