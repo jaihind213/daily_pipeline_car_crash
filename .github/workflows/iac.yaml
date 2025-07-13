@@ -89,7 +89,7 @@ jobs:
           kubectl create namespace sealed-secrets  || echo "sealed-secrets namespace exists"
           helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets || echo "sealed secrets repo added"
           helm repo update
-          helm install sealed-secrets-controller sealed-secrets/sealed-secrets --namespace sealed-secrets
+          helm upgrade --install sealed-secrets-controller sealed-secrets/sealed-secrets --namespace sealed-secrets
           sleep 90
           kubectl get pods -A | grep sealed-secrets || echo "tried to get pods"
           kubectl create secret generic git-credentials --namespace airflow  --dry-run=client --from-literal=GIT_SYNC_USERNAME='${{ secrets.GIT_SYNC_USERNAME }}' --from-literal=GITSYNC_USERNAME='${{ secrets.GIT_SYNC_USERNAME }}' --from-literal=GIT_SYNC_PASSWORD='${{ secrets.GIT_SYNC_PASSWORD }}' --from-literal=GITSYNC_PASSWORD='${{ secrets.GIT_SYNC_PASSWORD }}' --from-literal=password=LOL -o json | kubeseal --namespace airflow --controller-namespace=sealed-secrets --scope=strict --format=yaml > my-secret-sealed.yaml
