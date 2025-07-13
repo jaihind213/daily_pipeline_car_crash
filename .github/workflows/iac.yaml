@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  setup_infra:
     runs-on: ubuntu-latest
 
     steps:
@@ -42,4 +42,6 @@ jobs:
           pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
 
       - name: Deploy with Pulumi
-        run: pulumi up --yes
+        run: |
+          cd infra-as-code
+          pulumi up --yes
