@@ -16,6 +16,11 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.14.0
+
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
         with:
@@ -75,3 +80,13 @@ jobs:
           else
             echo "✅ All nodes are Ready."
           fi
+      - name: airflow setup
+        run: |
+          cd infra-as-code/airflow
+          sed -e "s|__USER_NAME__|${{ secrets.AF_USER }}|g" \
+              -e "s|__KEY__|${{ secrets.AF_KEY }}|g" \
+              -e "s|__EMAIL__|${{ secrets.AF_EMAIL }}|g" \
+              -e "s|__FIRST_NAME__|${{ secrets.AF_FN }}|g" \
+              -e "s|__LAST_NAME__|${{ secrets.AF_LN }}|g" \
+              airflow_values_template.yaml > airflow_values.yaml
+          helm install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values3.yaml
