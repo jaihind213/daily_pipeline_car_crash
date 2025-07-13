@@ -103,6 +103,6 @@ jobs:
               -e "s|__FIRST_NAME__|${{ secrets.AF_FN }}|g" \
               -e "s|__LAST_NAME__|${{ secrets.AF_LN }}|g" \
               airflow_values_template.yaml > airflow_values.yaml
-          helm repo add apache-airflow https://airflow.apache.org
+          helm repo add apache-airflow https://airflow.apache.org || echo "airflow repo added"
           helm repo update
-          helm install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values3.yaml
+          helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml
