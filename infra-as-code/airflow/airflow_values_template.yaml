@@ -480,7 +480,7 @@ data:
   # Otherwise pass connection values in
   metadataConnection:
     user: postgres
-    pass: '__PGKEY__
+    pass: '__PGKEY__'
     protocol: postgresql
     host: ~
     port: 5432
