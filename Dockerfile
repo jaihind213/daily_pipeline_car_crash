@@ -12,9 +12,9 @@ WORKDIR /opt/daily_pipeline_car_crash
 RUN mkdir -p /opt/daily_pipeline_car_crash/config \
     && mkdir -p /opt/daily_pipeline_car_crash/data \
     && mkdir -p /opt/spark_jars \
-    && chmod -R 755 /opt/spark_jars \
+    && chmod -R 755 /opt/spark_jars
 
-COPY requirements.txt /opt/daily_pipeline_car_crash
+#COPY ./requirements.txt /opt/daily_pipeline_car_crash
 COPY ./spark_jars /opt/spark_jars/
 
 # Copy project files
