@@ -1,6 +1,8 @@
 import pulumi
 import pulumi_digitalocean as do
 import traceback
+from pulumi import InvokeError
+
 
 region = "sgp1"
 project_name = "first-project"
@@ -30,9 +32,17 @@ def create_k8s_cluster():
 
 
 try:
-    cluster = do.KubernetesCluster.get("existing-cluster", cluster_name, opts=pulumi.ResourceOptions())
-    pulumi.export("k8s_cluster_id", cluster.id)
-except Exception as e:
-    pulumi.log.warn(f"Cluster '{cluster_name}' details could not be fetched")
+    # This runs at runtime, so try/except works!
+    existing_cluster = do.get_kubernetes_cluster(name=cluster_name)
+    pulumi.export("k8s_cluster_id", existing_cluster.id)
+except InvokeError:
+    pulumi.log.warn(f"Cluster '{cluster_name}' does not exist — will create it.")
     traceback.print_exc()
-    #create_k8s_cluster()
+#
+# try:
+#     cluster = do.KubernetesCluster.get("existing-cluster", cluster_name, opts=pulumi.ResourceOptions())
+#     pulumi.export("k8s_cluster_id", cluster.id)
+# except Exception as e:
+#     pulumi.log.warn(f"Cluster '{cluster_name}' details could not be fetched")
+#     traceback.print_exc()
+#     #create_k8s_cluster()
