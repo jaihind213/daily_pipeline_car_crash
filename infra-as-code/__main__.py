@@ -1,7 +1,7 @@
 import pulumi
 import pulumi_digitalocean as do
 import traceback
-from pulumi import InvokeError
+#from pulumi import InvokeError
 
 
 region = "sgp1"
