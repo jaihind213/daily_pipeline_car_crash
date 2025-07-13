@@ -45,7 +45,7 @@ jobs:
       - name: Set up Pulumi stack
         run: |
           cd infra-as-code
-          pulumi refresh
+          pulumi refresh --yes
           pulumi stack select prod || pulumi stack init prod
           pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
 
