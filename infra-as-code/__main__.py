@@ -36,10 +36,11 @@ def create_k8s_cluster(cluster_name, region,version,tags, pool_name, node_size, 
 
 
 try:
-    #existing_cluster = do.get_kubernetes_cluster(name=cluster_name)
+    existing_cluster = do.get_kubernetes_cluster(name=cluster_name)
     resource_name=cluster_name
-    existing_cluster = do.get(resource_name, os.environ.get('K8S_CLUSTER_ID', ''))
-    pulumi.export("k8s_cluster_id", existing_cluster.id)
+    #existing_cluster = do.get(resource_name, os.environ.get('K8S_CLUSTER_ID', ''))
+    create_k8s_cluster(cluster_name, region, version, tags, pool_name, node_size, num_nodes, project_name)
+    #pulumi.export("k8s_cluster_id", existing_cluster.id)
 except Exception as e:
     if "Unable to find cluster with name" in str(e):
         pulumi.log.warn(f"**** Cluster '{cluster_name}' does not exist — will create it.")
