@@ -10,7 +10,7 @@ tags = ["k8s", "testing"]
 node_size= "s-2vcpu-4gb"
 num_nodes=3
 
-cluster = do.KubernetesCluster.get("existing-cluster", cluster_name, opts=pulumi.ResourceOptions(ignore_missing=True))
+cluster = do.KubernetesCluster.get("existing-cluster", cluster_name, opts=pulumi.ResourceOptions())
 
 # Only create if not found
 if cluster is None:
