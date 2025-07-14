@@ -105,6 +105,10 @@ jobs:
           cd infra-as-code/k8s
           envsubst < dag_secrets_template.yaml | kubectl create  --namespace airflow -f - --dry-run=client -o json | kubeseal --namespace airflow --controller-namespace=sealed-secrets --scope=strict --format=yaml > dag-sealed-secret.yaml
           kubectl apply -f dag-sealed-secret.yaml -n airflow
+      - name: ✨Spark Setup
+        run: |
+          helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-operator
+          helm install spark-operator spark-operator/spark-operator  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
       - name: 🌀༄ setup
         run: |
           cd infra-as-code/airflow
@@ -119,7 +123,7 @@ jobs:
           helm repo add apache-airflow https://airflow.apache.org || echo "airflow repo added"
           helm repo update
           helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml
-      - name: 📣 Apply Dag Configs
+      - name: 📣 Apply Configs
         run: |
           cd infra-as-code/k8s
           kubectl apply -n airflow -f common_config_map.yaml
