@@ -65,12 +65,11 @@ jobs:
             echo "✅ Exported K8S_CLUSTER_ID"
             export K8S_CLUSTER_ID=$OUTPUT
           fi
-      - name: D eploy with Pulumi
+      - name: Deploy with Pulumi
         run: |
           cd infra-as-code
           pulumi up --yes
           echo "K8S_CLUSTER_ID=$(pulumi stack output k8s_cluster_id)" >> $GITHUB_ENV
-          pulumi destroy --remove --yes
       - name: Save DigitalOcean kubeconfig
         run: |
           cd infra-as-code
@@ -130,4 +129,5 @@ jobs:
         if: always()
         run: |
           cd infra-as-code
+          pulumi stack select prod
           pulumi destroy --remove --yes
