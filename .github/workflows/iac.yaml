@@ -102,7 +102,7 @@ jobs:
           export S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}
           export ICEBERG_PATH=${{ secrets.ICEBERG_PATH }}
           export RAW_DATA_PATH=${{ secrets.RAW_DATA_PATH }}
-          cd ../k8s
+          cd infra-as-code/k8s
           envsubst < dag_secrets_template.yaml | kubectl create -f - --dry-run=client -o json | kubeseal --namespace airflow --controller-namespace=sealed-secrets --scope=strict --format=yaml > dag-sealed-secret.yaml
           kubectl apply -f dag-sealed-secret.yaml -n airflow
       - name: 🌀༄ setup
