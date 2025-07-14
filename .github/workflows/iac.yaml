@@ -130,4 +130,4 @@ jobs:
         if: always()
         run: |
           cd infra-as-code
-          pulumi destroy --remove --yes --color -e
+          pulumi destroy --remove --yes
