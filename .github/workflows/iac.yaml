@@ -65,11 +65,12 @@ jobs:
             echo "✅ Exported K8S_CLUSTER_ID"
             export K8S_CLUSTER_ID=$OUTPUT
           fi
-      - name: Deploy with Pulumi
+      - name: D eploy with Pulumi
         run: |
           cd infra-as-code
           pulumi up --yes
           echo "K8S_CLUSTER_ID=$(pulumi stack output k8s_cluster_id)" >> $GITHUB_ENV
+          pulumi destroy --remove --yes --color -e
       - name: Save DigitalOcean kubeconfig
         run: |
           cd infra-as-code
@@ -97,6 +98,13 @@ jobs:
           kubectl get pods -A | grep sealed-secrets || echo "tried to get pods"
           kubectl create secret generic git-credentials --namespace airflow  --dry-run=client --from-literal=GIT_SYNC_USERNAME='${{ secrets.GIT_SYNC_USERNAME }}' --from-literal=GITSYNC_USERNAME='${{ secrets.GIT_SYNC_USERNAME }}' --from-literal=GIT_SYNC_PASSWORD='${{ secrets.GIT_SYNC_PASSWORD }}' --from-literal=GITSYNC_PASSWORD='${{ secrets.GIT_SYNC_PASSWORD }}' --from-literal=password=LOL -o json | kubeseal --namespace airflow --controller-namespace=sealed-secrets --scope=strict --format=yaml > my-secret-sealed.yaml
           kubectl apply -f my-secret-sealed.yaml -n airflow
+          export SOCRATA_TOKEN=${{ secrets.SOCRATA_APP_TOKEN }}
+          export S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}
+          export S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}
+          export ICEBERG_PATH=${{ secrets.ICEBERG_PATH }}
+          export RAW_DATA_PATH=${{ secrets.RAW_DATA_PATH }}
+          envsubst < dag_secrets_template.yaml | kubectl create -f - --dry-run=client -o json | kubeseal--namespace airflow --controller-namespace=sealed-secrets --scope=strict --format=yaml > dag-sealed-secret.yaml
+          kubectl apply -f dag-sealed-secret.yaml -n airflow
       - name: 🌀༄ setup
         run: |
           cd infra-as-code/airflow
@@ -111,3 +119,15 @@ jobs:
           helm repo add apache-airflow https://airflow.apache.org || echo "airflow repo added"
           helm repo update
           helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml
+      - name: Apply Dag Configs
+        run: |
+          cd infra-as-code/k8s
+          kubectl apply -n airflow -f common_config_map.yaml
+          kubectl apply -n airflow -f cubes_job_config_map.yaml
+          kubectl apply -n airflow -f ingest_job_config_map.yaml
+          sleep 600
+      - name: 🔥Tear down
+        if: always()
+        run: |
+          cd infra-as-code
+          pulumi destroy --remove --yes --color -e

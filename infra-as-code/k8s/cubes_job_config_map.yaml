@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cubes-job-config-map
+  namespace: airflow
+data:
+  driver_cores: "1"
+  driver_memory: "512m"
+  driver_core_limit: "2200m"
+  executor_cores: "1"
+  executor_instances: "1"
+  executor_memory: "512m"
+  spark_version: "3.5.0"
+  java_home: "/opt/java/openjdk"
+  spark_home: "/opt/spark"

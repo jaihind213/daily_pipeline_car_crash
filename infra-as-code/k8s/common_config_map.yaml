@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: image-config-map
+data:
+  image: jaihind213/daily_pipeline_car_crash:0.0.39-0.1
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: common-config-map
+  namespace: airflow
+data:
+  cubes.json: |
+    {
+      "cubelets": [
+        {
+          "name": "crashes_people_summary",
+          "sql": "with params as ( select start_time, end_time from local.db.job_params ), crash_data as ( select c.crash_record_id, c.crash_date, c.is_am, c.damage_estimate as damage, c.injuries_total as number_injured, c.injuries_fatal as number_fatal, c.weather_condition, c.lighting_condition, c.hit_and_run_i = 'y' as is_hit_run, c.street_name, c.latitude as lat, c.longitude as lon, c.road_defect from local.db.crashes c cross join params p where c.crash_date >= p.start_time and c.crash_date <= p.end_time ), people_data as ( select p.crash_record_id, cast(nullif(p.bac_result, '') as double) as bac_value, p.hospital, p.sex, p.age, p.airbag_deployed, p.cell_phone_use from local.db.crashes_people p where p.crash_record_id in (select crash_record_id from crash_data) ), aggregated_people as ( select crash_record_id, max(case when cell_phone_use = 'y' then true else false end) as is_cell_phone_use, max(case when bac_value > 0.08 then true else false end) as is_drunk, sort_array(array_distinct(collect_list(hospital))) as list_of_hospital, sort_array(array_distinct(collect_list(sex))) as list_of_gender, max(case when age < 5 then true else false end) as is_age_below_5, max(case when age between 10 and 19 then true else false end) as is_age_10s, max(case when age between 20 and 29 then true else false end) as is_age_20s, max(case when age between 30 and 39 then true else false end) as is_age_30s, max(case when age between 40 and 49 then true else false end) as is_age_40s, max(case when age between 50 and 59 then true else false end) as is_age_50s, max(case when age >= 60 then true else false end) as is_age_senior, collect_list(airbag_deployed) as list_of_airbag_deployed from people_data group by crash_record_id ) select c.crash_date, c.crash_record_id, c.is_am, c.damage, c.number_injured, c.number_fatal, c.weather_condition, c.lighting_condition, c.is_hit_run, c.street_name, c.lat, c.lon, c.road_defect, p.is_cell_phone_use, p.is_drunk, p.list_of_hospital, p.list_of_gender, p.is_age_below_5, p.is_age_10s, p.is_age_20s, p.is_age_30s, p.is_age_40s, p.is_age_50s, p.is_age_senior, p.list_of_airbag_deployed from crash_data c left join aggregated_people p on c.crash_record_id = p.crash_record_id"
+        },
+        {
+          "name": "crashes_people_vehicle_summary",
+          "sql": "SELECT cps.crash_date, cps.crash_record_id, cps.is_am, cps.damage, cps.number_injured, cps.number_fatal, cps.weather_condition, cps.lighting_condition, cps.is_hit_run, cps.street_name, cps.lat, cps.lon, cps.road_defect, cps.is_cell_phone_use, cps.is_drunk, cps.list_of_hospital, cps.list_of_gender, cps.is_age_below_5, cps.is_age_10s, cps.is_age_20s, cps.is_age_30s, cps.is_age_40s, cps.is_age_50s, cps.is_age_senior, cps.list_of_airbag_deployed, Sort_array(Collect_list(cv.vehicle_use)) AS vehicle_uses, Sort_array(Collect_list(cv.make)) AS vehicle_makes, Bool_or(cv.fire_i) AS fire_happened, sum(cv.occupant_cnt) AS num_people_involved, Bool_or(cv.hazmat_class IS NOT NULL AND cv.hazmat_class <> '') AS hazmat_involved FROM local.db.crashes_people_summary cps LEFT JOIN local.db.crashes_vehicles cv ON cps.crash_record_id = cv.crash_record_id GROUP BY cps.crash_date, cps.crash_record_id, cps.is_am, cps.damage, cps.number_injured, cps.number_fatal, cps.weather_condition, cps.lighting_condition, cps.is_hit_run, cps.street_name, cps.lat, cps.lon, cps.road_defect, cps.is_cell_phone_use, cps.is_drunk, cps.list_of_hospital, cps.list_of_gender, cps.is_age_below_5, cps.is_age_10s, cps.is_age_20s, cps.is_age_30s, cps.is_age_40s, cps.is_age_50s, cps.is_age_senior, cps.list_of_airbag_deployed;"
+        },
+        {
+          "name": "crashes_cube",
+          "sql": "SELECT Date(crash_date) AS crash_day, lat,lon,list_of_hospital,list_of_gender,list_of_airbag_deployed,vehicle_uses,vehicle_makes,is_am, weather_condition, lighting_condition, is_hit_run, street_name, road_defect, is_cell_phone_use, is_drunk, is_age_below_5, is_age_10s, is_age_20s, is_age_30s, is_age_40s, is_age_50s, is_age_senior, fire_happened, hazmat_involved, Sum(num_people_involved) AS total_people_involved, Sum(number_injured) AS total_injured, Sum(number_fatal) AS total_fatal, Sum(damage) AS total_damage, Set_sketch(crash_record_id) AS crashes_set_sketch FROM local.db.crashes_people_vehicle_summary GROUP BY Date(crash_date),lat,lon,list_of_hospital,list_of_gender,list_of_airbag_deployed,vehicle_uses,vehicle_makes, is_am, weather_condition, lighting_condition, is_hit_run, street_name, road_defect, is_cell_phone_use, is_drunk, is_age_below_5, is_age_10s, is_age_20s, is_age_30s, is_age_40s, is_age_50s, is_age_senior, fire_happened, hazmat_involved;"
+        }
+      ]
+    }
+  default_job_config.ini: |
+    [logging]
+    log_level = INFO
+
+    [job]
+    target_timezone = America/Chicago
+    blob_storage_endpoint_url = https://sgp1.digitaloceanspaces.com
+
+    [pull_job]
+    #raw_data_path = /opt/daily_pipeline_car_crash/data/crash_data
+    raw_data_path = ${RAW_DATA_PATH:/tmp/crash_data_raw}
+    # name vs id
+    datasets =  {"crashes": {"id": "85ca-t3if", "time_column" : "crash_date"},  "crashes_people": {"id": "u6pd-qa9d", "time_column" : "crash_date"}, "crashes_vehicles": {"id": "68nd-jvt3", "time_column" : "crash_date"}}
+    timeout_sec = 10
+    batch_size = 2000
+    sleep_time_millis = 100
+    domain = data.cityofchicago.org
+
+    socrata_token = ${SOCRATA_TOKEN:abc}
+    socrata_username = ${SOCRATA_USERNAME}
+    socrata_password = ${SOCRATA_PASSWORD}
+
+    [iceberg]
+    catalog_name = local
+    catalog_type = hadoop
+    db = db
+    wh_path = ${ICEBERG_PATH:/tmp/crash_data_iceberg}
+
+    [cubes]
+    json_path = /opt/daily_pipeline_car_crash/config/cubes.json
+    output_path = /tmp/cubes
+
+    [spark]
+    spark.local.dir	 = /tmp/spark-temp
+    #spark.master	 = local
+    #spark.jars.packages = org.apache.iceberg:iceberg-spark-runtime-3.5_2.13:1.8.1,io.github.jaihind213:spark-set-udaf:spark3.5.2-scala2.13-1.0.1-jdk11,org.apache.hadoop:hadoop-aws:3.4.1
+    #hadoop-aws use the same version of hadoop jars in SPARK_HOME/jars
+    #set JAVA_HOME/SPARK_HOME in the image
+    #spark.jars.packages = software.amazon.awssdk:identity-spi:2.31.74,software.amazon.awssdk:auth:2.31.74,software.amazon.awssdk:aws-core:2.31.74,software.amazon.awssdk:sdk-core:2.31.74,org.apache.iceberg:iceberg-spark-runtime-3.5_2.13:1.9.1,io.github.jaihind213:spark-set-udaf:spark3.5.2-scala2.13-1.0.1-jdk11,org.apache.hadoop:hadoop-common:3.3.4,org.apache.hadoop:hadoop-client:3.3.4,org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.787
+    #spark.jars.packages = org.apache.hadoop:hadoop-common:3.3.6,org.apache.hadoop:hadoop-aws:3.4.1,org.apache.iceberg:iceberg-spark-runtime-3.5_2.13:1.9.1,io.github.jaihind213:spark-set-udaf:spark3.5.2-scala2.13-1.0.1-jdk11
+    spark.executor.userClassPathFirst= = true
+    spark.driver.userClassPathFirst = true
+    #spark jars always relative to project path
+    # add the spark packages jars to extraClassPath in the image
+    #spark.driver.extraClassPath = /opt/spark_jars/*
+    #spark.executor.extraClassPath = /opt/spark_jars/*
+    #spark.sql.extensions = org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions
+    spark.sql.session.timeZone = GMT
+    spark.sql.legacy.parquet.nanosAsLong = true
+    spark.sql.parquet.timestampNTZ.enabled = true
+    spark.hadoop.fs.s3a.access.key = ${S3_ACCESS_KEY:abc}
+    spark.hadoop.fs.s3a.secret.key = ${S3_SECRET_KEY:foo}
+    spark.hadoop.fs.s3a.endpoint= ${S3_ENDPOINT:sgp1.digitaloceanspaces.com}
+    #spark.hadoop.fs.s3a.impl= "org.apache.hadoop.fs.s3b.S3AFileSystem"
+    #spark.sql.shuffle.partitions = 1
+    #spark.sql.parquet.compression.codec	= brotli
+    #fs.s3a.impl = "org.apache.hadoop.fs.s3a.S3AFileSystem"
+
