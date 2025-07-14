@@ -125,6 +125,9 @@ jobs:
           kubectl apply -n airflow -f common_config_map.yaml
           kubectl apply -n airflow -f cubes_job_config_map.yaml
           kubectl apply -n airflow -f ingest_job_config_map.yaml
+          kubectl apply -n airflow -f airflow-read-configmap-role.yaml
+          kubectl apply -n airflow -f spark-rbac-config.yaml
+          kubectl apply -n airflow -f spark-rbac.yaml
           sleep 600
       - name: 🔥Tear down
         if: always()
