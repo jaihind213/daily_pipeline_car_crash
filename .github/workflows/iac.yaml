@@ -24,6 +24,9 @@ jobs:
       - name: Install kubeseal
         uses: digitalservicebund/setup-kubeseal@v1.0.0
 
+      - name: Install envsubst
+        run: sudo apt-get update && sudo apt-get install -y gettext
+
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
         with:
@@ -97,13 +100,21 @@ jobs:
       - name: 🌀༄ setup
         run: |
           cd infra-as-code/airflow
-          sed -e "s|__USER_NAME__|${{ secrets.AF_USER }}|g" \
-              -e "s|__KEY__|${{ secrets.AF_KEY }}|g" \
-              -e "s|__EMAIL__|${{ secrets.AF_EMAIL }}|g" \
-              -e "s|__FIRST_NAME__|${{ secrets.AF_FN }}|g" \
-              -e "s|__PGKEY__|${{ secrets.PGKEY }}|g" \
-              -e "s|__LAST_NAME__|${{ secrets.AF_LN }}|g" \
-              airflow_values_template.yaml > airflow_values.yaml
+#          sed -e "s|__USER_NAME__|${{ secrets.AF_USER }}|g" \
+#              -e "s|__KEY__|${{ secrets.AF_KEY }}|g" \
+#              -e "s|__EMAIL__|${{ secrets.AF_EMAIL }}|g" \
+#              -e "s|__FIRST_NAME__|${{ secrets.AF_FN }}|g" \
+#              -e "s|__PGKEY__|${{ secrets.PGKEY }}|g" \
+#              -e "s|__LAST_NAME__|${{ secrets.AF_LN }}|g" \
+#              airflow_values_template.yaml > airflow_values.yaml
+          export PGKEY=${{ secrets.PGKEY }}
+          export AF_FN=${{ secrets.AF_FN }}
+          export AF_LN=${{ secrets.AF_LN }}
+          export AF_EMAIL=${{ secrets.AF_EMAIL }}
+          export AF_USER=${{ secrets.AF_USER }}
+          export AF_KEY=${{ secrets.AF_KEY }}
+               
+          envsubst < airflow_values_template.yaml > airflow_values.yaml
           helm repo add apache-airflow https://airflow.apache.org || echo "airflow repo added"
           helm repo update
           helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml

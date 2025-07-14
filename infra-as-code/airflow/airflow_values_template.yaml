@@ -480,7 +480,7 @@ data:
   # Otherwise pass connection values in
   metadataConnection:
     user: postgres
-    pass: postgres1
+    pass: "{{ .Values.postgres.password }}"
     protocol: postgresql
     host: ~
     port: 5432
@@ -1500,11 +1500,11 @@ webserver:
   defaultUser:
     enabled: true
     role: Admin
-    username: daredevil
-    email: admin@example.com
-    firstName: admin
-    lastName: user
-    password: punisher@879#Plm
+    username: "{{ .Values.airflow.user }}"
+    email: "{{ .Values.airflow.email }}"
+    firstName: "{{ .Values.airflow.fn }}"
+    lastName: "{{ .Values.airflow.ln }}"
+    password: "{{ .Values.airflow.password }}"
 
   # Launch additional containers into webserver (templated).
   extraContainers: []
@@ -2640,7 +2640,7 @@ postgresql:
   enabled: true
   auth:
     enablePostgresUser: true
-    postgresPassword: postgres1
+    postgresPassword: "{{ .Values.postgres.password }}"
     username: ""
     password: ""
 
