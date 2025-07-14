@@ -480,7 +480,7 @@ data:
   # Otherwise pass connection values in
   metadataConnection:
     user: postgres
-    pass: postgres
+    pass: postgres1
     protocol: postgresql
     host: ~
     port: 5432
@@ -2640,7 +2640,7 @@ postgresql:
   enabled: true
   auth:
     enablePostgresUser: true
-    postgresPassword: postgres
+    postgresPassword: postgres1
     username: ""
     password: ""
 
