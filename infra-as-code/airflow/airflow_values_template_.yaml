@@ -1500,11 +1500,11 @@ webserver:
   defaultUser:
     enabled: true
     role: Admin
-    username: daredevil
-    email: admin@example.com
-    firstName: admin
-    lastName: user
-    password: punisher@879#Plm
+    username: __USER_NAME__
+    email: __EMAIL__
+    firstName: __FIRST_NAME__
+    lastName: __LAST_NAME__
+    password: __KEY__
 
   # Launch additional containers into webserver (templated).
   extraContainers: []
@@ -2636,6 +2636,7 @@ cleanup:
 
 # Configuration for postgresql subchart
 # Not recommended for production
+#changed
 postgresql:
   enabled: true
   auth:
