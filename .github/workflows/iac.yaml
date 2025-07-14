@@ -128,6 +128,8 @@ jobs:
           kubectl apply -n airflow -f airflow-read-configmap-role.yaml
           kubectl apply -n airflow -f spark-rbac-config.yaml
           kubectl apply -n airflow -f spark-rbac.yaml
+      - name: Run airflow dag
+        run: |
           sleep 600
       - name: 🔥Tear down
         if: always()
