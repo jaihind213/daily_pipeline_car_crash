@@ -97,6 +97,7 @@ jobs:
       - name: ✨Spark Setup
         run: |
           git clone https://github.com/GoogleCloudPlatform/spark-on-k8s-operator.git
+          ls -lah
           cd spark-on-k8s-operator/charts/spark-operator
           helm install spark-operator spark-operator/spark-operator  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
           helm repo list
