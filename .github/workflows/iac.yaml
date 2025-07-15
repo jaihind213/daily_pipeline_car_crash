@@ -92,13 +92,14 @@ jobs:
           helm repo update
           helm repo add apache-airflow https://airflow.apache.org
           helm repo update
-          helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-operator || echo "mite error out, but its adds it anyway"
-          helm repo update
+          #helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-operator # gives 404, was working.
           helm repo list
-          helm repo list | grep spark-operator
       - name: ✨Spark Setup
         run: |
+          git clone https://github.com/GoogleCloudPlatform/spark-on-k8s-operator.git
+          cd spark-on-k8s-operator/charts/spark-operator
           helm install spark-operator spark-operator/spark-operator  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
+          helm repo list
       - name: 🌀༄ Airflow secret 🔐
         run: |
           kubectl create namespace airflow || echo "airflow namespace exists"
