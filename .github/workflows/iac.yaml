@@ -108,6 +108,7 @@ jobs:
       - name: ✨Spark Setup
         run: |
           helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-operator
+          helm repo update
           helm install spark-operator spark-operator/spark-operator  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
       - name: 🌀༄ setup
         run: |
