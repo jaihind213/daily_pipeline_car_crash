@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  K8S_BOOTUP_TIME_SEC: 60
+  K8S_BOOTUP_TIME_SEC: 180
 jobs:
   setup_infra:
     runs-on: ubuntu-latest
@@ -86,7 +86,12 @@ jobs:
           else
             echo "✅ All nodes are Ready."
           fi
-      - name: 🌀༄ 🔐
+      - name: ✨Spark Setup
+        run: |
+          helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-operator
+          helm repo update
+          helm install spark-operator spark-operator/spark-operator  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
+      - name: 🌀༄ Airflow secret 🔐
         run: |
           kubectl create namespace airflow || echo "airflow namespace exists"
           kubectl create namespace sealed-secrets  || echo "sealed-secrets namespace exists"
@@ -105,12 +110,7 @@ jobs:
           cd infra-as-code/k8s
           envsubst < dag_secrets_template.yaml | kubectl create  --namespace airflow -f - --dry-run=client -o json | kubeseal --namespace airflow --controller-namespace=sealed-secrets --scope=strict --format=yaml > dag-sealed-secret.yaml
           kubectl apply -f dag-sealed-secret.yaml -n airflow
-      - name: ✨Spark Setup
-        run: |
-          helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-operator
-          helm repo update
-          helm install spark-operator spark-operator/spark-operator  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
-      - name: 🌀༄ setup
+      - name: 🌀༄ Airflow setup
         run: |
           cd infra-as-code/airflow
           export PGKEY=${{ secrets.PGKEY }}
@@ -140,5 +140,5 @@ jobs:
         if: always()
         run: |
           cd infra-as-code
-          pulumi stack select prod
-          pulumi destroy --remove --yes
+          #pulumi stack select prod
+          #pulumi destroy --remove --yes
