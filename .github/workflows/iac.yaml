@@ -86,12 +86,18 @@ jobs:
           else
             echo "✅ All nodes are Ready."
           fi
+      - name: Add helm repos
+        run: |
+          helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
+          helm repo update
+          helm repo add apache-airflow https://airflow.apache.org
+          helm repo update
+          helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-operator || echo "mite error out, but its adds it anyway"
+          helm repo update
+          helm repo list
+          helm repo list | grep spark-operator
       - name: ✨Spark Setup
         run: |
-          helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-operator || echo "mite error out, but its adds it anyway"
-          helm repo list
-          helm repo list | grep spark-operator          
-          helm repo update
           helm install spark-operator spark-operator/spark-operator  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
       - name: 🌀༄ Airflow secret 🔐
         run: |
