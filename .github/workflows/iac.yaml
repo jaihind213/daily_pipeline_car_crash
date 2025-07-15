@@ -70,8 +70,8 @@ jobs:
           cd infra-as-code
           pulumi up --yes
           echo "K8S_CLUSTER_ID=$(pulumi stack output k8s_cluster_id)" >> $GITHUB_ENV
-          pulumi stack select prod
-          pulumi destroy --remove --yes
+          #pulumi stack select prod
+          #pulumi destroy --remove --yes
       - name: 💾Save DigitalOcean kubeconfig
         run: |
           cd infra-as-code
@@ -105,7 +105,7 @@ jobs:
           #cd spark-on-k8s-operator/charts/spark-operator-chart
           #helm install spark-operator spark-operator/spark-operator  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
           #helm install spark-operator .  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
-          helm install spark-operator spark-operator/spark-operator  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
+          helm install spark-operator spark-operator/spark-operator --set sparkJobNamespace=*  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
           helm repo list
       - name: 🌀༄ Airflow secret 🔐
         run: |
