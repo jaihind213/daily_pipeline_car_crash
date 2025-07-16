@@ -70,8 +70,8 @@ jobs:
           cd infra-as-code
           pulumi up --yes
           echo "K8S_CLUSTER_ID=$(pulumi stack output k8s_cluster_id)" >> $GITHUB_ENV
-          #pulumi stack select prod
-          #pulumi destroy --remove --yes
+          pulumi stack select prod
+          pulumi destroy --remove --yes
       - name: 💾Save DigitalOcean kubeconfig
         run: |
           cd infra-as-code
@@ -92,7 +92,7 @@ jobs:
               echo "✅ All nodes are Ready."
             fi
           else
-            echo "✅ All nodes are Ready."
+            echo "✅ All nodes are Ready."  
           fi
       - name: Add helm repos
         run: |
@@ -115,7 +115,8 @@ jobs:
           #helm install spark-operator spark-operator/spark-operator  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
           #helm install spark-operator .  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
           #helm install spark-operator spark-operator/spark-operator --set sparkJobNamespace=*  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator --create-namespace
-          helm install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set sparkjobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator
+          #helm install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set sparkjobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator
+          helm install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set spark.jobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator
           
           helm repo list
           cd infra-as-code/k8s
@@ -179,5 +180,5 @@ jobs:
         if: always()
         run: |
           cd infra-as-code
-          pulumi stack select prod
-          pulumi destroy --remove --yes
+          #pulumi stack select prod
+          #pulumi destroy --remove --yes
