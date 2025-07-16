@@ -109,6 +109,7 @@ jobs:
           helm install spark-operator spark-operator/spark-operator --set sparkJobNamespace={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator --create-namespace
           
           helm repo list
+          cd infra-as-code/k8s
           kubectl apply -n airflow -f spark-rbac.yaml
           kubectl apply -f spark-operator-role-binding.yaml
           kubectl apply -f spark-operator-role.yaml
@@ -167,5 +168,5 @@ jobs:
         if: always()
         run: |
           cd infra-as-code
-          pulumi stack select prod
-          pulumi destroy --remove --yes
+          #pulumi stack select prod
+          #pulumi destroy --remove --yes
