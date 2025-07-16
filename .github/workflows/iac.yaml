@@ -174,5 +174,5 @@ jobs:
         if: always()
         run: |
           cd infra-as-code
-          #pulumi stack select prod
-          #pulumi destroy --remove --yes
+          pulumi stack select prod
+          pulumi destroy --remove --yes
