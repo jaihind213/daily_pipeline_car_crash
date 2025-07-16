@@ -150,7 +150,8 @@ jobs:
           envsubst < airflow_values_template.yaml > airflow_values.yaml
           helm repo add apache-airflow https://airflow.apache.org || echo "airflow repo added"
           helm repo update
-          helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml
+          sleep 60
+          helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml --debug --v=9
           sleep ${{ env.K8S_BOOTUP_TIME_SEC }}
       - name: 📣 Apply Configs
         run: |
