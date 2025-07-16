@@ -4,7 +4,7 @@ metadata:
   name: image-config-map
   namespace: airflow
 data:
-  image: jaihind213/daily_pipeline_car_crash:0.0.39-0.1
+  image: jaihind213/daily_pipeline_car_crash:0.0.40-0.1
 ---
 apiVersion: v1
 kind: ConfigMap

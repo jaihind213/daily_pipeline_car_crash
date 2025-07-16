@@ -144,6 +144,12 @@ def get_spark_session(config, app_name):
     # Register the set sketch UDFs
     try:
         jvm = spark._jvm
+        configuration_class = jvm.java.lang.Class.forName("org.apache.iceberg.spark.SparkCatalog")
+        jar_path = configuration_class.getProtectionDomain().getCodeSource().getLocation().getPath()
+        print("----------------------------->>>>>>>")
+        print(jar_path)
+        print("----------------------------->>>>>>>")
+        print("----------------------------->>>>>>>")
         jvm_spark = spark._jsparkSession
         jvm.io.github.jaihind213.SetAggregator.register(jvm_spark, 4096, 9001)
     except Exception as e:
