@@ -91,7 +91,6 @@ jobs:
             else
               echo "✅ All nodes are Ready."
             fi
-            fi
           else
             echo "✅ All nodes are Ready."
           fi
