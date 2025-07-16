@@ -95,7 +95,7 @@ with DAG(
         namespace="airflow",
         application_file=ingest_job_app_file,
         kubernetes_conn_id="kubernetes_default",
-        do_xcom_push=False,
+        do_xcom_push=True,
     )
 
     # # Create application files
@@ -120,7 +120,7 @@ with DAG(
         namespace="airflow",
         application_file=cubes_job_app_file,
         kubernetes_conn_id="kubernetes_default",
-        do_xcom_push=False,
+        do_xcom_push=True,
     )
 
     # pull_data
