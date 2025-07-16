@@ -51,6 +51,7 @@ def create_py_spark_operator_app_file(
                 "coreLimit": spark_config.get("driver_core_limit", "1200m"),
                 "memory": spark_config.get("driver_memory", "1g"),
                 "serviceAccount": service_account,
+                "deleteOnTermination": False,
                 "env": [
                     {
                         "name": "JAVA_HOME",
@@ -74,6 +75,7 @@ def create_py_spark_operator_app_file(
                 "cores": int(spark_config.get("executor_cores", "2")),
                 "instances": int(spark_config.get("executor_instances", "1")),
                 "memory": spark_config.get("executor_memory", "2g"),
+                "deleteOnTermination": False,
                 "env": [
                     {
                         "name": "JAVA_HOME",
