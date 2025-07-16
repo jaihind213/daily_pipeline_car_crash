@@ -78,19 +78,12 @@ jobs:
           doctl kubernetes cluster kubeconfig save ${{ env.K8S_CLUSTER_ID }}
       - name: ⚠️ Check if k8s nodes ready
         run: |
+          sleep ${{ env.K8S_BOOTUP_TIME_SEC }}
           export NOT_READY_NODES=$(kubectl get nodes --no-headers | awk '$2 != "Ready"')
           if [ -n "$NOT_READY_NODES" ]; then
-            echo "⚠️ Some nodes are NotReady: lets wait"
             echo "$NOT_READY_NODES"
-            sleep ${{ env.K8S_BOOTUP_TIME_SEC }}
-            export NOT_READY_NODES=$(kubectl get nodes --no-headers | awk '$2 != "Ready"')
-            if [ -n "$NOT_READY_NODES" ]; then
-                echo "❌ Some nodes are still NotReady after waiting:"
-                echo "$NOT_READY_NODES"
-                exit 1
-            else
-              echo "✅ All nodes are Ready."
-            fi
+            echo "❌ Some nodes are still NotReady after waiting:"
+            exit 1
           else
             echo "✅ All nodes are Ready."  
           fi
