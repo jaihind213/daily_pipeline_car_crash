@@ -167,7 +167,7 @@ jobs:
           kubectl apply -n airflow -f spark-rbac-config.yaml
       - name: 🚀 trigger airflow dag
         run: |
-          sleep 800
+          sleep 10
 #          kubectl -n airflow get svc |grep airflow-webserver
 #          kubectl -n airflow expose svc airflow-webserver --type=LoadBalancer --name=airflow-lb
 #          sleep 180
@@ -179,5 +179,5 @@ jobs:
         if: always()
         run: |
           cd infra-as-code
-          #pulumi stack select prod
-          #pulumi destroy --remove --yes
+          pulumi stack select prod
+          pulumi destroy --remove --yes
