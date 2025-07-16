@@ -115,14 +115,14 @@ jobs:
           #helm install spark-operator spark-operator/spark-operator  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
           #helm install spark-operator .  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
           #helm install spark-operator spark-operator/spark-operator --set sparkJobNamespace=*  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator --create-namespace
-          helm install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set sparkJobNamespace={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator
+          helm install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set sparkjobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator
           
           helm repo list
           cd infra-as-code/k8s
           kubectl apply -n airflow -f spark-rbac.yaml
           kubectl apply -n airflow -f spark-operator-cluster-rbac.yaml
           #check any errors
-          kubectl logs -n spark-operator -l app.kubernetes.io/name=spark-operator |grep err
+          kubectl logs -n spark-operator -l app.kubernetes.io/name=spark-operator |grep -vi err
           #kubectl apply -f spark-operator-role-binding.yaml
           #kubectl apply -f spark-operator-role.yaml
       - name: 🌀༄ Airflow secret 🔐
