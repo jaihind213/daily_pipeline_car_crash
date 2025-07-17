@@ -65,6 +65,8 @@ jobs:
             echo "✅ Exported K8S_CLUSTER_ID"
             export K8S_CLUSTER_ID=$OUTPUT
           fi
+          #pulumi stack select prod
+          #pulumi destroy --remove --yes
       - name: 🚚Deploy with Pulumi
         run: |
           cd infra-as-code
@@ -107,7 +109,16 @@ jobs:
           #helm install spark-operator .  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
           #helm install spark-operator spark-operator/spark-operator --set sparkJobNamespace=*  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator --create-namespace
           #helm install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set sparkjobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator
-          helm install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set spark.jobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator --wait --timeout 500s
+          
+          #works
+          #helm install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set spark.jobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator --wait --timeout 500s
+          for i in {1..2}; do
+            helm install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set spark.jobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator && break || {
+                echo "spark operator Install failed on attempt $i"
+                sleep 10
+              }
+          done 
+          helm status spark-operator --namespace spark-operator | grep -q "STATUS: deployed"
           sleep ${{ env.K8S_BOOTUP_TIME_SEC }}
           helm repo list
           cd infra-as-code/k8s
