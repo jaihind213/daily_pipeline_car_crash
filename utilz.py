@@ -1,6 +1,7 @@
 import datetime
 import os
 import re
+import time
 from typing import Tuple
 
 from pyspark.sql import SparkSession
@@ -145,6 +146,7 @@ def get_spark_session(config, app_name):
     try:
         jvm = spark._jvm
         print("----------------------------->>>>>>>")
+        time.sleep(300)
         configuration_class = jvm.java.lang.Class.forName("org.apache.iceberg.spark.SparkCatalog")
         jar_path = configuration_class.getProtectionDomain().getCodeSource().getLocation().getPath()
         print(jar_path)

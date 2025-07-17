@@ -1,13 +1,19 @@
 #!/bin/bash
 set -e
 
-IMAGE_NAME=docker.io/jaihind213/daily_pipeline_car_crash
+DEFAULT_IMAGE_NAME=docker.io/jaihind213/daily_pipeline_car_crash
 PROJECT_VERSION=$1
+IMAGE_NAME=$2
 
 if [ "$PROJECT_VERSION" == "" ];then
   echo "PROJECT_VERSION not set as 1st argument. bash buildDocker.sh <version>"
   exit 2
 fi
+
+if [ "$IMAGE_NAME" == "" ];then
+  IMAGE_NAME=$DEFAULT_IMAGE_NAME
+fi
+
 
 if [ "$PUSH_REPO" == "" ];then
   echo "PUSH_REPO not set. Use 'remote' to push to remote registry, 'tar' to save as tar file, or leave empty to load locally."
@@ -28,13 +34,14 @@ if [ "$PLATFORM" == "" ];then
 fi
 
 if [ "$PUSH_REPO" == "remote" ];then
-  DOCKER_ARGS="--output=type=registry"
+  DOCKER_ARGS="${DOCKER_ARGS} --output=type=registry"
 elif [ "$PUSH_REPO" == "tar" ];then
   #https://docs.docker.com/reference/cli/docker/buildx/build/
-  DOCKER_ARGS="--output type=tar,dest=gopher.tar"
+  DOCKER_ARGS="${DOCKER_ARGS} --output type=tar,dest=gopher.tar"
 else
-  DOCKER_ARGS="--load" #or --output=type=docker both are same
+  DOCKER_ARGS="${DOCKER_ARGS} --load" #or --output=type=docker both are same
 fi
+echo DOCKER_ARGS=${DOCKER_ARGS}
 
 #####################
 export IMAGE_VERSION="${PROJECT_VERSION}-$DOCKERFILE_VERSION"
