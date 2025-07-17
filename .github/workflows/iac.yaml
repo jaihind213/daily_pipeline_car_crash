@@ -57,6 +57,8 @@ jobs:
         run: |
           cd infra-as-code
           pulumi stack select prod || pulumi stack init prod
+          #pulumi stack select prod
+          pulumi destroy --remove --yes
           pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
           pulumi refresh --yes
           OUTPUT=$(pulumi stack output k8s_cluster_id || echo "")
@@ -147,7 +149,7 @@ jobs:
           helm repo add apache-airflow https://airflow.apache.org || echo "airflow repo added"
           helm repo update
           sleep 60
-          helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml --debug --v=9
+          helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml --debug --v=9  --wait --timeout 500s
           sleep ${{ env.K8S_BOOTUP_TIME_SEC }}
       - name: 📣 Apply Configs
         run: |
