@@ -27,7 +27,8 @@ RUN python3 -m pip config set global.break-system-packages true \
 # Set permissions
 RUN chown -R ${spark_uid}:${spark_uid} /opt/daily_pipeline_car_crash \
  && chmod -R 777 /opt/daily_pipeline_car_crash/config \
- && chmod -R 777 /opt/daily_pipeline_car_crash/data
+ && chmod -R 777 /opt/daily_pipeline_car_crash/data \
+ && chown -R ${spark_uid}:${spark_uid} /opt/spark_jars && chmod 777 /opt/spark_jars/*
 
 # Environment variables
 ENV JAVA_HOME=/opt/java/openjdk

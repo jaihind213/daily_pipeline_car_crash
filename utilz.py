@@ -144,9 +144,9 @@ def get_spark_session(config, app_name):
     # Register the set sketch UDFs
     try:
         jvm = spark._jvm
+        print("----------------------------->>>>>>>")
         configuration_class = jvm.java.lang.Class.forName("org.apache.iceberg.spark.SparkCatalog")
         jar_path = configuration_class.getProtectionDomain().getCodeSource().getLocation().getPath()
-        print("----------------------------->>>>>>>")
         print(jar_path)
         print("----------------------------->>>>>>>")
         print("----------------------------->>>>>>>")
@@ -157,6 +157,7 @@ def get_spark_session(config, app_name):
         import traceback
 
         traceback.print_exc()
+        raise e
 
     return spark
 
