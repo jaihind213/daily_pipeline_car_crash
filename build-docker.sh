@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
 
-DEFAULT_IMAGE_NAME=docker.io/jaihind213/daily_pipeline_car_crash
 PROJECT_VERSION=$1
 IMAGE_NAME=$2
+DEFAULT_IMAGE_NAME=docker.io/jaihind213/daily_pipeline_car_crash
 
 if [ "$PROJECT_VERSION" == "" ];then
   echo "PROJECT_VERSION not set as 1st argument. bash buildDocker.sh <version>"

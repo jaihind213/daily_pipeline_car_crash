@@ -63,8 +63,8 @@ def create_py_spark_operator_app_file(
                     },
                     {
                         "name": "SPARK_CLASSPATH",
-                        "value": "/opt/spark/conf:/opt/spark_jars/*:/opt/spark/jars/*"
-                    }
+                        "value": "/opt/spark/conf:/opt/spark_jars/*:/opt/spark/jars/*",
+                    },
                 ],
                 "envFrom": [{"secretRef": {"name": secret_holding_env_vars}}],
                 "volumeMounts": [
@@ -91,8 +91,8 @@ def create_py_spark_operator_app_file(
                     },
                     {
                         "name": "SPARK_CLASSPATH",
-                        "value": "/opt/spark/conf:/opt/spark_jars/*:/opt/spark/jars/*"
-                    }
+                        "value": "/opt/spark/conf:/opt/spark_jars/*:/opt/spark/jars/*",
+                    },
                 ],
                 "envFrom": [{"secretRef": {"name": secret_holding_env_vars}}],
                 "volumeMounts": [

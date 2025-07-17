@@ -21,7 +21,7 @@ default_args = {
 with DAG(
     dag_id="chicago_car_crash_pipeline",
     default_args=default_args,
-    description="Runs daily car crash pipeline with config and date using Spark on Kubernetes",
+    description="Runs daily car crash pipeline with config and date using Spark on Kubernetes",  # noqa: E501
     schedule_interval="@daily",
     start_date=datetime.now(),
     catchup=False,
