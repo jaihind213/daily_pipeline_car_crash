@@ -2411,8 +2411,7 @@ pgbouncer:
 
 # Configuration for the redis provisioned by the chart
 redis:
-  #changed this, this is optional
-  enabled: false
+  enabled: true
   terminationGracePeriodSeconds: 600
 
   # Annotations for Redis Statefulset
