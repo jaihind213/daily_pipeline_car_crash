@@ -66,8 +66,6 @@ jobs:
             echo "✅ Exported K8S_CLUSTER_ID"
             export K8S_CLUSTER_ID=$OUTPUT
           fi
-          #pulumi stack select prod
-          pulumi destroy --remove --yes
       - name: 🚚Deploy with Pulumi
         run: |
           cd infra-as-code
