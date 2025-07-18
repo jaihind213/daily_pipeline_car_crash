@@ -58,7 +58,7 @@ jobs:
         run: |
           cd infra-as-code
           pulumi stack select prod || pulumi stack init prod
-          pulumi destroy --remove --yes
+          #pulumi destroy --remove --yes
           pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
           pulumi refresh --yes
           OUTPUT=$(pulumi stack output k8s_cluster_id || echo "")
@@ -98,43 +98,10 @@ jobs:
           helm repo add --force-update spark-operator https://kubeflow.github.io/spark-operator
           helm repo update
           helm repo list
-      - name: ✨Spark Setup
-        run: |
+          kubectl delete namespace airflow --ignore-not-found=true 
           kubectl create namespace airflow || echo "airflow namespace exists"
-          kubectl delete namespace spark-operator || echo "it is ok to fail"
+          kubectl delete namespace spark-operator --ignore-not-found=true
           kubectl create namespace spark-operator || echo "spark-operator namespace exists"
-          #git clone https://github.com/GoogleCloudPlatform/spark-on-k8s-operator.git
-          #cd spark-on-k8s-operator/charts/spark-operator-chart
-          #helm install spark-operator spark-operator/spark-operator  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
-          #helm install spark-operator .  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
-          #helm install spark-operator spark-operator/spark-operator --set sparkJobNamespace=*  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator --create-namespace
-          #helm install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set sparkjobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator
-          
-          #works
-          #helm install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set spark.jobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator --wait --timeout 500s
-          for i in {1..2}; do
-            helm upgrade --install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set spark.jobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator && break || {
-                echo "spark operator Install failed on attempt $i"
-                sleep 10
-              }
-          done 
-          helm status spark-operator --namespace spark-operator | grep -q "STATUS: deployed"
-          sleep ${{ env.K8S_BOOTUP_TIME_SEC }}
-          helm repo list
-          cd infra-as-code/k8s
-          kubectl apply -n airflow -f spark-rbac.yaml
-          kubectl apply -n airflow -f spark-operator-cluster-rbac.yaml
-          #check any errors
-          #kubectl logs -n spark-operator -l app.kubernetes.io/name=spark-operator |grep -vi err
-          sleep 120
-          LOG_OUTPUT=$(kubectl logs -n spark-operator -l app.kubernetes.io/name=spark-operator --all-containers=true)
-
-              echo "$LOG_OUTPUT" | grep -iE 'error|exception|fail' && {
-                echo "❌ Error found in Spark Operator logs"
-                exit 1
-              }
-
-          echo "✅ No errors found in Spark Operator logs"
       - name: 🌀༄ Airflow secret 🔐
         run: |
           kubectl create namespace sealed-secrets  || echo "sealed-secrets namespace exists"
@@ -171,6 +138,43 @@ jobs:
           #helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml --debug --v=9  --wait --timeout 500s
           helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml --version 1.18.0 --debug --v=9  --wait --timeout 500s
           sleep ${{ env.K8S_BOOTUP_TIME_SEC }}
+      - name: ✨Spark Setup
+        run: |
+          kubectl create namespace airflow || echo "airflow namespace exists"
+          kubectl delete namespace spark-operator || echo "it is ok to fail"
+          kubectl create namespace spark-operator || echo "spark-operator namespace exists"
+          #git clone https://github.com/GoogleCloudPlatform/spark-on-k8s-operator.git
+          #cd spark-on-k8s-operator/charts/spark-operator-chart
+          #helm install spark-operator spark-operator/spark-operator  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
+          #helm install spark-operator .  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
+          #helm install spark-operator spark-operator/spark-operator --set sparkJobNamespace=*  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator --create-namespace
+          #helm install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set sparkjobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator
+
+          #works
+          #helm install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set spark.jobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator --wait --timeout 500s
+          for i in {1..2}; do
+            helm upgrade --install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set spark.jobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator && break || {
+                echo "spark operator Install failed on attempt $i"
+                sleep 10
+              }
+          done 
+          helm status spark-operator --namespace spark-operator | grep -q "STATUS: deployed"
+          sleep ${{ env.K8S_BOOTUP_TIME_SEC }}
+          helm repo list
+          cd infra-as-code/k8s
+          kubectl apply -n airflow -f spark-rbac.yaml
+          kubectl apply -n airflow -f spark-operator-cluster-rbac.yaml
+          #check any errors
+          #kubectl logs -n spark-operator -l app.kubernetes.io/name=spark-operator |grep -vi err
+          sleep 120
+          LOG_OUTPUT=$(kubectl logs -n spark-operator -l app.kubernetes.io/name=spark-operator --all-containers=true)
+
+              echo "$LOG_OUTPUT" | grep -iE 'error|exception|fail' && {
+                echo "❌ Error found in Spark Operator logs"
+                exit 1
+              }
+
+          echo "✅ No errors found in Spark Operator logs"
       - name: 📣 Apply Configs
         run: |
           cd infra-as-code/k8s
