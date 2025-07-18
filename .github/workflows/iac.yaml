@@ -124,7 +124,16 @@ jobs:
           kubectl apply -n airflow -f spark-rbac.yaml
           kubectl apply -n airflow -f spark-operator-cluster-rbac.yaml
           #check any errors
-          kubectl logs -n spark-operator -l app.kubernetes.io/name=spark-operator |grep -vi err
+          #kubectl logs -n spark-operator -l app.kubernetes.io/name=spark-operator |grep -vi err
+          sleep 120
+          LOG_OUTPUT=$(kubectl logs -n spark-operator -l app.kubernetes.io/name=spark-operator --all-containers=true)
+
+              echo "$LOG_OUTPUT" | grep -iE 'error|exception|fail' && {
+                echo "❌ Error found in Spark Operator logs"
+                exit 1
+              }
+
+          echo "✅ No errors found in Spark Operator logs"
       - name: 🌀༄ Airflow secret 🔐
         run: |
           kubectl create namespace sealed-secrets  || echo "sealed-secrets namespace exists"
