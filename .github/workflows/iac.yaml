@@ -159,15 +159,6 @@ jobs:
           #works
           sleep 300
           helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml --debug --v=9  --wait --timeout 500s
-#          kubectl proxy &
-#          for i in {1..3}; do
-#            helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml --wait --timeout 900s --kube-apiserver=http://127.0.0.1:8001 && break || {
-#                echo "airflow chart Install failed on attempt $i"
-#                sleep 180
-#              }
-#          done
-#          helm status airflow --namespace airflow | grep -q "STATUS: deployed"
-          
           sleep ${{ env.K8S_BOOTUP_TIME_SEC }}
       - name: 📣 Apply Configs
         run: |
