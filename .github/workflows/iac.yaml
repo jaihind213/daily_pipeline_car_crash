@@ -69,9 +69,9 @@ jobs:
         run: |
           cd infra-as-code
           pulumi up --yes
+          pulumi stack select prod
+          pulumi destroy --remove --yes
           echo "K8S_CLUSTER_ID=$(pulumi stack output k8s_cluster_id)" >> $GITHUB_ENV
-          #pulumi stack select prod
-          #pulumi destroy --remove --yes
       - name: 💾Save DigitalOcean kubeconfig
         run: |
           cd infra-as-code
