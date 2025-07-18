@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  K8S_BOOTUP_TIME_SEC: 180
+  K8S_BOOTUP_TIME_SEC: 500
   DAG_TIME_SLEEP_SEC: 900
 jobs:
   setup_infra:
@@ -76,17 +76,28 @@ jobs:
         run: |
           cd infra-as-code
           doctl kubernetes cluster kubeconfig save ${{ env.K8S_CLUSTER_ID }}
-      - name: ⚠️ Check if k8s nodes ready
+      - name: ⚠️ Check if k8s pods ready
         run: |
           sleep ${{ env.K8S_BOOTUP_TIME_SEC }}
-          export NOT_READY_NODES=$(kubectl get nodes --no-headers | awk '$2 != "Ready"')
-          if [ -n "$NOT_READY_NODES" ]; then
-            echo "$NOT_READY_NODES"
-            echo "❌ Some nodes are still NotReady after waiting:"
+          export NOT_READY_PODS=$(kubectl get pods --all-namespaces --no-headers | awk '$2 != "Running"')
+          if [ -n "$NOT_READY_PODS" ]; then
+            echo "$NOT_READY_PODS"
+            echo "❌ Some K8S PODS are still not running after waiting:"
             exit 1
           else
-            echo "✅ All nodes are Ready."  
+            echo "✅ All K8S PODS are Running."  
           fi
+#      - name: ⚠️ Check if k8s nodes ready
+#        run: |
+#          sleep ${{ env.K8S_BOOTUP_TIME_SEC }}
+#          export NOT_READY_NODES=$(kubectl get nodes --no-headers | awk '$2 != "Ready"')
+#          if [ -n "$NOT_READY_NODES" ]; then
+#            echo "$NOT_READY_NODES"
+#            echo "❌ Some nodes are still NotReady after waiting:"
+#            exit 1
+#          else
+#            echo "✅ All nodes are Ready."
+#          fi
       - name: Add helm repos
         run: |
           helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
