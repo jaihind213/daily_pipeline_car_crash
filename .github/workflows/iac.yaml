@@ -102,6 +102,7 @@ jobs:
           helm repo update
           #helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-operator # gives 404, was working.
           helm uninstall spark-operator -n spark-operator  || echo "it ok to fail"
+          helm uninstall airflow -n airflow  || echo "it ok to fail"
           helm repo add --force-update spark-operator https://kubeflow.github.io/spark-operator
           helm repo update
           helm repo list
@@ -118,6 +119,7 @@ jobs:
           #helm install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set sparkjobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator
           helm install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set spark.jobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator
           
+          sleep 180
           helm repo list
           cd infra-as-code/k8s
           kubectl apply -n airflow -f spark-rbac.yaml
