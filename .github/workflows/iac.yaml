@@ -67,7 +67,7 @@ jobs:
             export K8S_CLUSTER_ID=$OUTPUT
           fi
           #pulumi stack select prod
-          #pulumi destroy --remove --yes
+          pulumi destroy --remove --yes
       - name: 🚚Deploy with Pulumi
         run: |
           cd infra-as-code
@@ -159,7 +159,17 @@ jobs:
           helm repo add apache-airflow https://airflow.apache.org || echo "airflow repo added"
           helm repo update
           sleep 60
-          helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml --debug --v=9  --wait --timeout 500s
+          #works
+          #helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml --debug --v=9  --wait --timeout 500s
+          
+          for i in {1..2}; do
+            helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml && break || {
+                echo "airflow chart Install failed on attempt $i"
+                sleep 10
+              }
+          done 
+          helm status airflow --namespace airflow | grep -q "STATUS: deployed"
+          
           sleep ${{ env.K8S_BOOTUP_TIME_SEC }}
       - name: 📣 Apply Configs
         run: |
