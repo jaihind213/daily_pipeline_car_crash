@@ -156,7 +156,7 @@ jobs:
           envsubst < airflow_values_template.yaml > airflow_values.yaml
           helm repo add apache-airflow https://airflow.apache.org || echo "airflow repo added"
           helm repo update
-          sleep 60
+          sleep 180
           #works
           #helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml --debug --v=9  --wait --timeout 500s
           
