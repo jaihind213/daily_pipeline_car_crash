@@ -201,3 +201,12 @@ jobs:
           cd infra-as-code
           pulumi stack select prod
           pulumi destroy --remove --yes
+          echo "Deleting orphan pvc resouces in cloud..."
+      - name: 🗑️Clean up
+        if: always()
+        run: |
+          echo "Deleting orphan pvc resoruces in cloud..."
+          echo "list of orphans...."
+          doctl compute volume list --format ID,Name,DropletIDs | awk '$3 == "" && $2 ~ /^pvc-/'
+          echo "Deleting orphan volumes..."
+          doctl compute volume list --format ID,Name,DropletIDs | awk '$3 == "" && $2 ~ /^pvc-/ { print $1 }' | xargs -n1 doctl compute volume delete --force

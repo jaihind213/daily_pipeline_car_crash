@@ -41,3 +41,13 @@ cluster_id, cluster_urn = create_k8s_cluster(
 )
 pulumi.export("k8s_cluster_id", cluster_id)
 pulumi.export("k8s_cluster_urn", cluster_urn)
+
+pulumi.export(
+    "waiting",
+    pulumi.runtime.invoke(
+        "pulumi:providers:kubernetes",
+        {
+            # Dummy invocation to force a wait
+        },
+    ),
+)
