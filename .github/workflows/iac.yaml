@@ -162,7 +162,7 @@ jobs:
           helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml
       - name: 📣 Apply Configs
         run: |
-          cd infra-as-code/k8s
+          cd infra-as-code/k8s/app_configs
           kubectl apply -n airflow -f common_config_map.yaml
           kubectl apply -n airflow -f cubes_job_config_map.yaml
           kubectl apply -n airflow -f ingest_job_config_map.yaml
