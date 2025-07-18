@@ -203,7 +203,7 @@ jobs:
           kubectl -n airflow delete service airflow-lb --ignore-not-found
           cd infra-as-code
           pulumi stack select prod
-          pulumi destroy --remove --yes
+          #pulumi destroy --remove --yes
           echo "Deleting orphan pvc resouces in cloud..."
       - name: 🗑️Clean up
         if: always()
@@ -212,4 +212,4 @@ jobs:
           echo "list of orphans...."
           doctl compute volume list --format ID,Name,DropletIDs | awk '$3 == "" && $2 ~ /^pvc-/'
           echo "Deleting orphan volumes..."
-          doctl compute volume list --format ID,Name,DropletIDs --no-header | awk '$3 == "" && $2 ~ /^pvc-/ { print $1 }' | xargs -n1 -I {} doctl compute volume delete {} --force 
+          #doctl compute volume list --format ID,Name,DropletIDs --no-header | awk '$3 == "" && $2 ~ /^pvc-/ { print $1 }' | xargs -n1 -I {} doctl compute volume delete {} --force 
