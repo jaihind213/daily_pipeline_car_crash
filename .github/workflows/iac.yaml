@@ -58,7 +58,7 @@ jobs:
         run: |
           cd infra-as-code
           pulumi stack select prod || pulumi stack init prod
-          #pulumi destroy --remove --yes
+          pulumi destroy --remove --yes
           pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
           pulumi refresh --yes
           OUTPUT=$(pulumi stack output k8s_cluster_id || echo "")
