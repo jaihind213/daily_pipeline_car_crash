@@ -7,8 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  K8S_BOOTUP_TIME_SEC: 500
-  DAG_TIME_SLEEP_SEC: 900
+  K8S_BOOTUP_TIME_SEC: 180
 jobs:
   setup_infra:
     runs-on: ubuntu-latest
@@ -58,7 +57,6 @@ jobs:
         run: |
           cd infra-as-code
           pulumi stack select prod || pulumi stack init prod
-          #pulumi destroy --remove --yes
           pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
           pulumi refresh --yes
           OUTPUT=$(pulumi stack output k8s_cluster_id || echo "")
@@ -72,32 +70,30 @@ jobs:
           cd infra-as-code
           pulumi up --yes
           echo "K8S_CLUSTER_ID=$(pulumi stack output k8s_cluster_id)" >> $GITHUB_ENV
+          pulumi stack select prod
+          pulumi destroy --remove --yes
       - name: 💾Save DigitalOcean kubeconfig
         run: |
           cd infra-as-code
           doctl kubernetes cluster kubeconfig save ${{ env.K8S_CLUSTER_ID }}
-      - name: ⚠️ Check if k8s pods ready
+      - name: ⚠️ Check if k8s nodes ready
         run: |
-          sleep 10
-          export NOT_READY_PODS=$(kubectl get pods --all-namespaces --no-headers | awk '$4 != "Running"')
-          if [ -n "$NOT_READY_PODS" ]; then
-            echo "$NOT_READY_PODS"
-            echo "❌ Some K8S PODS are still not running after waiting:"
-            exit 1
+          export NOT_READY_NODES=$(kubectl get nodes --no-headers | awk '$2 != "Ready"')
+          if [ -n "$NOT_READY_NODES" ]; then
+            echo "⚠️ Some nodes are NotReady: lets wait"
+            echo "$NOT_READY_NODES"
+            sleep ${{ env.K8S_BOOTUP_TIME_SEC }}
+            export NOT_READY_NODES=$(kubectl get nodes --no-headers | awk '$2 != "Ready"')
+            if [ -n "$NOT_READY_NODES" ]; then
+                echo "❌ Some nodes are still NotReady after waiting:"
+                echo "$NOT_READY_NODES"
+                exit 1
+            else
+              echo "✅ All nodes are Ready."
+            fi
           else
-            echo "✅ All K8S PODS are Running."  
+            echo "✅ All nodes are Ready."  
           fi
-#      - name: ⚠️ Check if k8s nodes ready
-#        run: |
-#          sleep ${{ env.K8S_BOOTUP_TIME_SEC }}
-#          export NOT_READY_NODES=$(kubectl get nodes --no-headers | awk '$2 != "Ready"')
-#          if [ -n "$NOT_READY_NODES" ]; then
-#            echo "$NOT_READY_NODES"
-#            echo "❌ Some nodes are still NotReady after waiting:"
-#            exit 1
-#          else
-#            echo "✅ All nodes are Ready."
-#          fi
       - name: Add helm repos
         run: |
           helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
@@ -109,10 +105,27 @@ jobs:
           helm repo add --force-update spark-operator https://kubeflow.github.io/spark-operator
           helm repo update
           helm repo list
-          kubectl delete namespace airflow --ignore-not-found=true 
+      - name: ✨Spark Setup
+        run: |
           kubectl create namespace airflow || echo "airflow namespace exists"
-          kubectl delete namespace spark-operator --ignore-not-found=true
+          kubectl delete namespace spark-operator || echo "it is ok to fail"
           kubectl create namespace spark-operator || echo "spark-operator namespace exists"
+          #git clone https://github.com/GoogleCloudPlatform/spark-on-k8s-operator.git
+          #cd spark-on-k8s-operator/charts/spark-operator-chart
+          #helm install spark-operator spark-operator/spark-operator  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
+          #helm install spark-operator .  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
+          #helm install spark-operator spark-operator/spark-operator --set sparkJobNamespace=*  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator --create-namespace
+          #helm install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set sparkjobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator
+          helm install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set spark.jobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator
+          
+          helm repo list
+          cd infra-as-code/k8s
+          kubectl apply -n airflow -f spark-rbac.yaml
+          kubectl apply -n airflow -f spark-operator-cluster-rbac.yaml
+          #check any errors
+          kubectl logs -n spark-operator -l app.kubernetes.io/name=spark-operator |grep -vi err
+          #kubectl apply -f spark-operator-role-binding.yaml
+          #kubectl apply -f spark-operator-role.yaml
       - name: 🌀༄ Airflow secret 🔐
         run: |
           kubectl create namespace sealed-secrets  || echo "sealed-secrets namespace exists"
@@ -144,89 +157,28 @@ jobs:
           envsubst < airflow_values_template.yaml > airflow_values.yaml
           helm repo add apache-airflow https://airflow.apache.org || echo "airflow repo added"
           helm repo update
-          #works
-          sleep 300
-          #helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml --debug --v=9  --wait --timeout 500s
-          helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values3.yaml --version 1.18.0 --debug --v=9  --wait --timeout 500s
-          sleep ${{ env.K8S_BOOTUP_TIME_SEC }}
-      - name: ✨Spark Setup
-        run: |
-          kubectl create namespace airflow || echo "airflow namespace exists"
-          kubectl delete namespace spark-operator || echo "it is ok to fail"
-          kubectl create namespace spark-operator || echo "spark-operator namespace exists"
-          #git clone https://github.com/GoogleCloudPlatform/spark-on-k8s-operator.git
-          #cd spark-on-k8s-operator/charts/spark-operator-chart
-          #helm install spark-operator spark-operator/spark-operator  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
-          #helm install spark-operator .  --set webhook.enable=true --set webhook.port=443 --namespace spark-operator --create-namespace
-          #helm install spark-operator spark-operator/spark-operator --set sparkJobNamespace=*  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator --create-namespace
-          #helm install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set sparkjobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator
-
-          #works
-          #helm install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set spark.jobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator --wait --timeout 500s
-          for i in {1..2}; do
-            helm upgrade --install spark-operator spark-operator/spark-operator  --set serviceAccounts.spark.name=spark-operator-controller --set spark.jobNamespaces={airflow}  --set webhook.enable=true --set webhook.enableCertManager=false --set webhook.servicePort=443 --set webhook.port=8443 --namespace spark-operator && break || {
-                echo "spark operator Install failed on attempt $i"
-                sleep 10
-              }
-          done 
-          helm status spark-operator --namespace spark-operator | grep -q "STATUS: deployed"
-          sleep ${{ env.K8S_BOOTUP_TIME_SEC }}
-          helm repo list
-          cd infra-as-code/k8s
-          kubectl apply -n airflow -f spark-rbac.yaml
-          kubectl apply -n airflow -f spark-operator-cluster-rbac.yaml
-          #check any errors
-          #kubectl logs -n spark-operator -l app.kubernetes.io/name=spark-operator |grep -vi err
-          sleep 120
-          LOG_OUTPUT=$(kubectl logs -n spark-operator -l app.kubernetes.io/name=spark-operator --all-containers=true)
-
-              echo "$LOG_OUTPUT" | grep -iE 'error|exception|fail' && {
-                echo "❌ Error found in Spark Operator logs"
-                exit 1
-              }
-
-          echo "✅ No errors found in Spark Operator logs"
+          helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml
       - name: 📣 Apply Configs
         run: |
           cd infra-as-code/k8s
-          kubectl apply -n airflow -f app_configs/common_config_map.yaml
-          kubectl apply -n airflow -f app_configs/cubes_job_config_map.yaml
-          kubectl apply -n airflow -f app_configs/ingest_job_config_map.yaml
+          kubectl apply -n airflow -f common_config_map.yaml
+          kubectl apply -n airflow -f cubes_job_config_map.yaml
+          kubectl apply -n airflow -f ingest_job_config_map.yaml
           kubectl apply -n airflow -f airflow-read-configmap-role.yaml
           kubectl apply -n airflow -f spark-rbac-config.yaml
-      - name:  🔫 trigger & Check airflow dag status
+      - name: 🚀 trigger airflow dag
         run: |
-          kubectl -n airflow expose svc airflow-webserver --type=LoadBalancer --name=airflow-lb
-          kubectl -n airflow get svc airflow-lb |grep -v NAME |awk '{print $4}' | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' > airflow-lb-ip.txt
-          export AIRFLOW_LB_IP=$(cat airflow-lb-ip.txt)
-          
-          bash trigger_dag.sh chicago_car_crash_pipeline ${{ secrets.AF_USER }} ${{ secrets.AF_KEY }} $AIRFLOW_LB_IP
-          sleep ${{ env.DAG_TIME_SLEEP_SEC }}
-      - name: 🟢🔴🟢 Check airflow dag status
-        run: |
-          RUN_ID=`cat /tmp/angiogram_dag_run_id`
-          echo "RUN_ID=$RUN_ID"
-          bash check_dag_status.sh chicago_car_crash_pipeline $RUN_ID ${{ secrets.AF_USER }} ${{ secrets.AF_KEY }} $AIRFLOW_LB_IP
-      #- name: ✅❌ Final Checkpoint - Angiogram Verification
+          sleep 10
 #          kubectl -n airflow get svc |grep airflow-webserver
 #          kubectl -n airflow expose svc airflow-webserver --type=LoadBalancer --name=airflow-lb
 #          sleep 180
 #          kubectl -n airflow get svc airflow-lb |grep -v NAME |awk '{print $4}' | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' > airflow-lb-ip.txt
 #          export AIRFLOW_LB_IP=$(cat airflow-lb-ip.txt)
 #          echo "AIRFLOW_LB_IP=$AIRFLOW_LB_IP" >> $GITHUB_ENV
+
       - name: 🔥Tear down
         if: always()
         run: |
-          kubectl -n airflow delete service airflow-lb --ignore-not-found
           cd infra-as-code
-          pulumi stack select prod
+          #pulumi stack select prod
           #pulumi destroy --remove --yes
-          echo "Deleting orphan pvc resouces in cloud..."
-      - name: 🗑️Clean up
-        if: always()
-        run: |
-          echo "Deleting orphan pvc resoruces in cloud..."
-          echo "list of orphans...."
-          doctl compute volume list --format ID,Name,DropletIDs | awk '$3 == "" && $2 ~ /^pvc-/'
-          echo "Deleting orphan volumes..."
-          #doctl compute volume list --format ID,Name,DropletIDs --no-header | awk '$3 == "" && $2 ~ /^pvc-/ { print $1 }' | xargs -n1 -I {} doctl compute volume delete {} --force 
