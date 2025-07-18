@@ -199,7 +199,7 @@ jobs:
       - name: 🔥Tear down
         if: always()
         run: |
-          kubectl -n airflow delete service airflow-lb
+          kubectl -n airflow delete service airflow-lb --ignore-not-found
           cd infra-as-code
           pulumi stack select prod
           pulumi destroy --remove --yes
