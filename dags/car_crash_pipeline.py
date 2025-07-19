@@ -55,8 +55,8 @@ with DAG(
 
     pull_image = KubernetesPodOperator(
         task_id="pull_image",
-        name="echo-shell-pod",
-        namespace="default",
+        name="pull_image",
+        namespace="airflow",
         image=image_tag,
         cmds=["sh", "-c"],
         arguments=['echo "pulling image so that other tasks can use it"'],
