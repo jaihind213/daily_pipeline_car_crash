@@ -8,8 +8,8 @@ on:
 
 env:
   K8S_BOOTUP_TIME_SEC: 180
-  DAG_RUN_TIME_SEC: 300
-  DAG_NAME: hello_world
+  DAG_RUN_TIME_SEC: 900
+  DAG_NAME: chicago_car_crash_pipeline
 jobs:
   setup_infra:
     runs-on: ubuntu-latest
