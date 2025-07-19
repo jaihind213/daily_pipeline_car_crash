@@ -54,7 +54,7 @@ with DAG(
     logging.info("image being used: %s", image_tag)
 
     pull_image = KubernetesPodOperator(
-        task_id="echo_with_shell",
+        task_id="pull_image",
         name="echo-shell-pod",
         namespace="default",
         image=image_tag,
