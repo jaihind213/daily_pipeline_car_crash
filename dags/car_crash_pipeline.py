@@ -53,6 +53,17 @@ with DAG(
     )
     logging.info("image being used: %s", image_tag)
 
+    pull_image = KubernetesPodOperator(
+        task_id="echo_with_shell",
+        name="echo-shell-pod",
+        namespace="default",
+        image=image_tag,
+        cmds=["sh", "-c"],
+        arguments=['echo "pulling image so that other tasks can use it"'],
+        get_logs=True,
+        dag=dag,
+    )
+
     pull_data = KubernetesPodOperator(
         task_id="pull_data",
         name="pull-data",
@@ -67,10 +78,10 @@ with DAG(
         env_from=du.get_env_from_secret("car-crash-secret"),
         get_logs=True,
         is_delete_operator_pod=False,
-        on_finish_action=OnFinishAction.KEEP_POD,
+        on_finish_action=OnFinishAction.DELETE_POD,
         volumes=[common_config_volume],
         volume_mounts=[common_config_volume_mount],
-        startup_timeout_seconds=180,
+        startup_timeout_seconds=300,
     )
 
     # # Create application files
@@ -124,4 +135,4 @@ with DAG(
     )
 
     # pull_data
-    pull_data >> ingest_job >> cubes_job
+    pull_image >> pull_data >> ingest_job >> cubes_job
