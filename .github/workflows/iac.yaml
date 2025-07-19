@@ -171,8 +171,10 @@ jobs:
           cd ../
           kubectl apply -n airflow -f airflow-read-configmap-role.yaml
           kubectl apply -n airflow -f spark-rbac-config.yaml
-      - name: 🚀 trigger airflow dag
+      - name: 🚀 compute Dag Compute date
         run: |
+          DAG_COMPUTE_DATE=$(date -d '2 days ago' '+%Y-%m-%d')
+          echo "DAG_COMPUTE_DATE=$DAG_COMPUTE_DATE" >> $GITHUB_ENV
           sleep 180
 #          kubectl -n airflow get svc |grep airflow-webserver
 #          kubectl -n airflow expose svc airflow-webserver --type=LoadBalancer --name=airflow-lb
@@ -197,7 +199,7 @@ jobs:
           export AIRFLOW_LB_IP=$(cat airflow-lb-ip.txt)
           echo "AIRFLOW_LB_IP=$AIRFLOW_LB_IP" >> $GITHUB_ENV
           sleep 180
-          bash trigger_dag.sh hello_world ${{ secrets.AF_USER }} ${{ secrets.AF_KEY }} $AIRFLOW_LB_IP
+          bash trigger_dag.sh hello_world ${{ env.DAG_COMPUTE_DATE }} ${{ secrets.AF_USER }} ${{ secrets.AF_KEY }} $AIRFLOW_LB_IP
           sleep ${{ env.DAG_RUN_TIME_SEC }}
       - name: 🟢🔴🟢 Check airflow dag status
         run: |
