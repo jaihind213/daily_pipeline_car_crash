@@ -30,6 +30,7 @@ curl -X POST "http://${AIRFLOW_HOST}:8080/api/v1/dags/${DAG_NAME}/dagRuns" \
 -d "{
   \"dag_run_id\": \"${RUN_ID}\",
   \"date\": \"${DAG_DATE}\"
+  \"conf\": {\"date\": \"${DAG_DATE}\"}
   \"note\": \"string\"
 }"
 
