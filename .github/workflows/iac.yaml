@@ -9,6 +9,7 @@ on:
 env:
   K8S_BOOTUP_TIME_SEC: 180
   DAG_RUN_TIME_SEC: 300
+  DAG_NAME: hello_world
 jobs:
   setup_infra:
     runs-on: ubuntu-latest
@@ -199,13 +200,13 @@ jobs:
           export AIRFLOW_LB_IP=$(cat airflow-lb-ip.txt)
           echo "AIRFLOW_LB_IP=$AIRFLOW_LB_IP" >> $GITHUB_ENV
           sleep 180
-          bash trigger_dag.sh hello_world ${{ env.DAG_COMPUTE_DATE }} ${{ secrets.AF_USER }} ${{ secrets.AF_KEY }} $AIRFLOW_LB_IP
+          bash trigger_dag.sh ${{ env.DAG_NAME }} ${{ env.DAG_COMPUTE_DATE }} ${{ secrets.AF_USER }} ${{ secrets.AF_KEY }} $AIRFLOW_LB_IP
           sleep ${{ env.DAG_RUN_TIME_SEC }}
       - name: 🟢🔴🟢 Check airflow dag status
         run: |
           RUN_ID=`cat /tmp/dag_run_id`
           echo "RUN_ID=$RUN_ID"
-          bash check_dag_status.sh chicago_car_crash_pipeline $RUN_ID ${{ secrets.AF_USER }} ${{ secrets.AF_KEY }} ${{ env.AIRFLOW_LB_IP }}
+          bash check_dag_status.sh ${{ env.DAG_NAME }} $RUN_ID ${{ secrets.AF_USER }} ${{ secrets.AF_KEY }} ${{ env.AIRFLOW_LB_IP }}
       - name: 🔥Tear down
         if: always()
         run: |
