@@ -1603,7 +1603,11 @@ webserver:
     securityContexts:
       container: {}
 
-  env: []
+  #env: []
+  #changed this for api auth enabling
+  env:
+    - name: AIRFLOW__API__AUTH_BACKEND
+      value: "airflow.api.auth.backend.basic_auth"
 
 # Airflow Triggerer Config
 triggerer:

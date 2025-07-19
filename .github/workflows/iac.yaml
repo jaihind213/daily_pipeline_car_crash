@@ -200,7 +200,7 @@ jobs:
           sleep ${{ env.DAG_RUN_TIME_SEC }}
       - name: 🟢🔴🟢 Check airflow dag status
         run: |
-          RUN_ID=`cat /tmp/angiogram_dag_run_id`
+          RUN_ID=`cat /tmp/dag_run_id`
           echo "RUN_ID=$RUN_ID"
           bash check_dag_status.sh chicago_car_crash_pipeline $RUN_ID ${{ secrets.AF_USER }} ${{ secrets.AF_KEY }} $AIRFLOW_LB_IP
       - name: 🔥Tear down
