@@ -365,5 +365,6 @@ jobs:
           echo "Deleting orphan volumes..."
           doctl compute volume list --format ID,Name,DropletIDs --no-header | awk '$3 == "" && $2 ~ /^pvc-/ { print $1 }' | xargs -n1 -I {} doctl compute volume delete {} --force
           echo "Deleting other volumes..."
+          sleep 90
           doctl compute volume list --format ID,Name,DropletIDs | awk '$3 != "[]" && $2 ~ /^pvc-/'
           doctl compute volume list --format ID,Name,DropletIDs --no-header | awk '$3 != "[]" && $2 ~ /^pvc-/ { print $1 }' | xargs -n1 -I {} doctl compute volume delete {} --force
