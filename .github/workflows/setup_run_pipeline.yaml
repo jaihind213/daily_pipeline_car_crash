@@ -105,6 +105,8 @@ jobs:
     needs: [setup_infra]
     environment: cicd
     steps:
+      - env:
+          K8S_CLUSTER_ID: $
       - name: Checkout repo
         uses: actions/checkout@v3
 
@@ -148,7 +150,7 @@ jobs:
       - name: 💾Save DigitalOcean kubeconfig
         run: |
           cd infra-as-code
-          doctl kubernetes cluster kubeconfig save ${{ needs.setup_infra.outputs.k8s_cluster_id }}
+          doctl kubernetes cluster kubeconfig save $K8S_CLUSTER_ID
       - name: Add helm repos
         run: |
           helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
