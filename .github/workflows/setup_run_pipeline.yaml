@@ -69,7 +69,7 @@ jobs:
             echo "K8S_CLUSTER_ID=$OUTPUT" >> $GITHUB_ENV
             echo "✅ Exported K8S_CLUSTER_ID"
             export K8S_CLUSTER_ID=$OUTPUT
-            echo "k8s_cluster_id=$K8S_CLUSTER_ID" >> $env:$GITHUB_OUTPUT
+            echo "cluster_id=$K8S_CLUSTER_ID" >> $GITHUB_OUTPUT
           fi
       - name: 🚚Deploy with Pulumi
         run: |
