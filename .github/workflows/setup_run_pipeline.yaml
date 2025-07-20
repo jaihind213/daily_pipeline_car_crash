@@ -10,6 +10,7 @@ env:
   K8S_BOOTUP_TIME_SEC: 180
   DAG_RUN_TIME_SEC: 900
   DAG_NAME: chicago_car_crash_pipeline
+  PULUMI_STACK_NAME: prod
 jobs:
   setup_infra:
     runs-on: ubuntu-latest
@@ -61,7 +62,7 @@ jobs:
         id: setup_up_pulumi_stack
         run: |
           cd infra-as-code
-          pulumi stack select prod || pulumi stack init prod
+          pulumi stack select ${{ env.PULUMI_STACK_NAME }} || pulumi stack init ${{ env.PULUMI_STACK_NAME }}
           pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
           pulumi refresh --yes
           OUTPUT=$(pulumi stack output k8s_cluster_id || echo "")
@@ -366,6 +367,8 @@ jobs:
           doctl kubernetes cluster kubeconfig save ${{ needs.setup_infra.outputs.k8s_cluster_id }}
       - name: 💥tear down all resources
         run: |
+          cd infra-as-code
+          pulumi stack select ${{ env.PULUMI_STACK_NAME }}
           echo "Deleting airflow load balancer service..."
           kubectl -n airflow delete svc airflow-lb --ignore-not-found
           sleep 30
