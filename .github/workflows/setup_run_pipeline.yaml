@@ -80,7 +80,7 @@ jobs:
       - name: 💾Save DigitalOcean kubeconfig
         run: |
           cd infra-as-code
-          doctl kubernetes cluster kubeconfig save ${{ needs.setup_infra.outputs.k8s_cluster_id }}
+          doctl kubernetes cluster kubeconfig save ${{ env.K8S_CLUSTER_ID }}
       - name: ⚠️ Check if k8s nodes ready
         run: |
           export NOT_READY_NODES=$(kubectl get nodes --no-headers | awk '$2 != "Ready"')
