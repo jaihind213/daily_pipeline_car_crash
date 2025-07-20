@@ -14,7 +14,7 @@ jobs:
   setup_infra:
     runs-on: ubuntu-latest
     outputs:
-      k8s_cluster_id: $
+      k8s_cluster_id: ${{ steps.setup_up_pulumi_stack.outputs.cluster_id }}
     environment: cicd
     steps:
       - name: Checkout repo
@@ -67,9 +67,9 @@ jobs:
           OUTPUT=$(pulumi stack output k8s_cluster_id || echo "")
           if [ -n "$OUTPUT" ]; then
             echo "K8S_CLUSTER_ID=$OUTPUT" >> $GITHUB_ENV
-            echo "k8s_cluster_id=$K8S_CLUSTER_ID" >> $GITHUB_OUTPUT
             echo "✅ Exported K8S_CLUSTER_ID"
             export K8S_CLUSTER_ID=$OUTPUT
+            echo "k8s_cluster_id=$K8S_CLUSTER_ID" >> $GITHUB_OUTPUT
           fi
       - name: 🚚Deploy with Pulumi
         run: |
@@ -150,7 +150,7 @@ jobs:
           K8S_CLUSTER_ID: $
         run: |
           cd infra-as-code
-          doctl kubernetes cluster kubeconfig save $K8S_CLUSTER_ID
+          doctl kubernetes cluster kubeconfig save ${{ needs.setup_infra.outputs.k8s_cluster_id }}
       - name: Add helm repos
         run: |
           helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
