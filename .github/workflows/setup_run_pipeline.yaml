@@ -14,7 +14,7 @@ jobs:
   setup_infra:
     runs-on: ubuntu-latest
     outputs:
-      k8s_cluster_id: ${{ steps.deploy_pulumi.outputs.k8s_cluster_id }}
+      k8s_cluster_id: ${{ steps.setup_up_pulumi_stack.outputs.k8s_cluster_id }}
     environment: cicd
     steps:
       - name: Checkout repo
@@ -58,6 +58,7 @@ jobs:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
       - name: 🏗️Set up Pulumi stack
+      - id: setup_up_pulumi_stack
         run: |
           cd infra-as-code
           pulumi stack select prod || pulumi stack init prod
