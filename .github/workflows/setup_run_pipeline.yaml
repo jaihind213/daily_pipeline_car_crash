@@ -26,12 +26,6 @@ jobs:
         with:
           version: v3.14.0
 
-      - name: 🦭Install kubeseal
-        uses: digitalservicebund/setup-kubeseal@v1.0.0
-
-      - name: Install envsubst
-        run: sudo apt-get update && sudo apt-get install -y gettext
-
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
         with:
@@ -239,12 +233,6 @@ jobs:
         with:
           version: v3.14.0
 
-      - name: 🦭Install kubeseal
-        uses: digitalservicebund/setup-kubeseal@v1.0.0
-
-      - name: Install envsubst
-        run: sudo apt-get update && sudo apt-get install -y gettext
-
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
         with:
@@ -328,12 +316,6 @@ jobs:
         uses: azure/setup-helm@v3
         with:
           version: v3.14.0
-
-      - name: 🦭Install kubeseal
-        uses: digitalservicebund/setup-kubeseal@v1.0.0
-
-      - name: Install envsubst
-        run: sudo apt-get update && sudo apt-get install -y gettext
 
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
