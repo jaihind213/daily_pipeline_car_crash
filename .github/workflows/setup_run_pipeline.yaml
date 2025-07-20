@@ -356,6 +356,8 @@ jobs:
           pulumi stack select ${{ env.PULUMI_STACK_NAME }}
           echo "Deleting airflow load balancer service..."
           kubectl -n airflow delete svc airflow-lb --ignore-not-found
+          helm uninstall spark-operator -n spark-operator 
+          helm uninstall airflow -n airflow
           kubectl delete all --all  --wait=true --timeout=0s
           sleep 180
           kubectl delete pvc --all
@@ -369,6 +371,6 @@ jobs:
           echo "Deleting orphan volumes..."
           doctl compute volume list --format ID,Name,DropletIDs --no-header | awk '$3 == "" && $2 ~ /^pvc-/ { print $1 }' | xargs -n1 -I {} doctl compute volume delete {} --force
           echo "Deleting other volumes..."
-          
+          sleep 300
           doctl compute volume list --format ID,Name,DropletIDs | awk '$3 != "[]" && $2 ~ /^pvc-/'
           doctl compute volume list --format ID,Name,DropletIDs --no-header | awk '$3 != "[]" && $2 ~ /^pvc-/ { print $1 }' | xargs -n1 -I {} doctl compute volume delete {} --force
