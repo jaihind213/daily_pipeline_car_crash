@@ -146,8 +146,6 @@ jobs:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
       - name: 💾Save DigitalOcean kubeconfig
-        env:
-          K8S_CLUSTER_ID: $
         run: |
           cd infra-as-code
           doctl kubernetes cluster kubeconfig save ${{ needs.setup_infra.outputs.k8s_cluster_id }}
@@ -166,7 +164,7 @@ jobs:
 
   setup_spark_operator:
     runs-on: ubuntu-latest
-    needs: [ setup_helm_repos ]
+    needs: [ setup_infra, setup_helm_repos ]
     environment: cicd
     steps:
       - name: Checkout repo
@@ -237,7 +235,7 @@ jobs:
           #kubectl apply -f spark-operator-role.yaml
   setup_airflow_operator:
     runs-on: ubuntu-latest
-    needs: [ setup_spark_operator ]
+    needs: [ setup_infra, setup_spark_operator ]
     environment: cicd
     steps:
       - name: Checkout repo
@@ -328,7 +326,7 @@ jobs:
           kubectl apply -n airflow -f spark-rbac-config.yaml
   trigger_dag:
     runs-on: ubuntu-latest
-    needs: [ setup_airflow_operator ]
+    needs: [ setup_infra, setup_airflow_operator ]
     environment: cicd
     steps:
       - name: Checkout repo
@@ -418,7 +416,7 @@ jobs:
 
   tear_down:
     runs-on: ubuntu-latest
-    needs: [ trigger_dag ]
+    needs: [ setup_infra, trigger_dag ]
     environment: cicd
     if: always()
     steps:
