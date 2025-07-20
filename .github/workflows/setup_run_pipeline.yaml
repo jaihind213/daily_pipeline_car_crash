@@ -105,8 +105,6 @@ jobs:
     needs: [setup_infra]
     environment: cicd
     steps:
-      - env:
-          K8S_CLUSTER_ID: $
       - name: Checkout repo
         uses: actions/checkout@v3
 
@@ -148,6 +146,8 @@ jobs:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
       - name: 💾Save DigitalOcean kubeconfig
+        env:
+          K8S_CLUSTER_ID: $
         run: |
           cd infra-as-code
           doctl kubernetes cluster kubeconfig save $K8S_CLUSTER_ID
