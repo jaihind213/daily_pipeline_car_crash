@@ -100,7 +100,7 @@ jobs:
           else
             echo "✅ All nodes are Ready."  
           fi
-  setup_spark_operator:
+  setup_spark_airflow_operator:
     runs-on: ubuntu-latest
     needs: [ setup_infra ]
     environment: cicd
@@ -183,67 +183,6 @@ jobs:
           kubectl logs -n spark-operator -l app.kubernetes.io/name=spark-operator |grep -vi err
           #kubectl apply -f spark-operator-role-binding.yaml
           #kubectl apply -f spark-operator-role.yaml
-  setup_airflow_operator:
-    runs-on: ubuntu-latest
-    needs: [ setup_infra, setup_spark_operator ]
-    environment: cicd
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      - name: Set up Helm
-        uses: azure/setup-helm@v3
-        with:
-          version: v3.14.0
-
-      - name: 🦭Install kubeseal
-        uses: digitalservicebund/setup-kubeseal@v1.0.0
-
-      - name: Install envsubst
-        run: sudo apt-get update && sudo apt-get install -y gettext
-
-      - name: Install doctl
-        uses: digitalocean/action-doctl@v2
-        with:
-          token: ${{ secrets.DO_TOKEN }}
-
-      - name: 🐍Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          cd infra-as-code
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Install Pulumi CLI
-        uses: pulumi/actions@v4
-        with:
-          pulumi-version: latest
-
-      - name: Login to Pulumi
-        run: pulumi login
-        env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-
-      - name: 💾Save DigitalOcean kubeconfig
-        run: |
-          cd infra-as-code
-          doctl kubernetes cluster kubeconfig save ${{ needs.setup_infra.outputs.k8s_cluster_id }}
-      - name: Add helm repos
-        run: |
-          helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
-          helm repo update
-          helm repo add apache-airflow https://airflow.apache.org
-          helm repo update
-          #helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-operator # gives 404, was working.
-          helm uninstall spark-operator -n spark-operator  || echo "it ok to fail"
-          helm uninstall airflow -n airflow  || echo "it ok to fail"
-          helm repo add --force-update spark-operator https://kubeflow.github.io/spark-operator
-          helm repo update
-          helm repo list
       - name: 🌀༄ Airflow secret 🔐
         run: |
           kubectl create namespace sealed-secrets  || echo "sealed-secrets namespace exists"
@@ -271,7 +210,7 @@ jobs:
           export AF_EMAIL=${{ secrets.AF_EMAIL }}
           export AF_USER=${{ secrets.AF_USER }}
           export AF_KEY=${{ secrets.AF_KEY }}
-               
+
           envsubst < airflow_values_template.yaml > airflow_values.yaml
           helm repo add apache-airflow https://airflow.apache.org || echo "airflow repo added"
           helm repo update
@@ -288,7 +227,7 @@ jobs:
           kubectl apply -n airflow -f spark-rbac-config.yaml
   trigger_dag:
     runs-on: ubuntu-latest
-    needs: [ setup_infra, setup_airflow_operator ]
+    needs: [ setup_infra, setup_spark_airflow_operator ]
     environment: cicd
     steps:
       - name: Checkout repo
@@ -335,7 +274,6 @@ jobs:
         run: |
           cd infra-as-code
           doctl kubernetes cluster kubeconfig save ${{ needs.setup_infra.outputs.k8s_cluster_id }}
-            - name: 🚀 compute Dag Compute date
       - name: 🚀 compute Dag Compute date
         run: |
           DAG_COMPUTE_DATE=$(date -d '2 days ago' '+%Y-%m-%d')
