@@ -10,7 +10,7 @@ on:
 
 env:
   K8S_BOOTUP_TIME_SEC: 180
-  DAG_RUN_TIME_SEC: 900
+  DAG_RUN_TIME_SEC: 540 # 9 minutes
   DAG_NAME: chicago_car_crash_pipeline
   PULUMI_STACK_NAME: prod
 jobs:
