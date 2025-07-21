@@ -1,0 +1,65 @@
+name: Build release version
+
+on:
+  release:
+    types:
+      - published
+
+env:
+  REGISTRY: docker.io/jaihind213
+  IMAGE_NAME: daily_pipeline_car_crash
+  IMAGE_DESCRIPTION: image for processing daily car crashes in chicago
+  IMAGE_TITLE: chicago_daily_Car_crash
+
+jobs:
+  compile_test:
+    runs-on: ubuntu-latest
+    environment: cicd
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    - name: 🐍 prepare for building
+      run: |
+        echo `pwd`
+        ls -lah        
+        python -m pip install --upgrade pip
+        pip install pytest==8.3.2
+        pip install isort==5.13.2
+        pip install flake8-bugbear==24.4.26
+        pip install black==24.4.2
+        pip install flake8==7.1.0
+
+        pip install --upgrade poetry==1.6.1
+        poetry export --without-hashes --format=requirements.txt > requirements.txt 
+        pip install -r requirements.txt
+        sh download_spark_deps.sh
+    - name: Generate image tags and labels
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.CUBE_IMAGE_NAME }}
+        flavor: |
+          latest=false
+        tags: |
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
+          ${{ env.IMAGE_VERSION }}
+          type=sha
+        labels: |
+          org.opencontainers.image.title=${{ env.IMAGE_TITLE }}
+          org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}
+    - name: Build and push
+      id: docker_build
+      uses: docker/build-push-action@v5
+      with:
+        context: ./
+        #file: ./Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
+    - name: Image digest
+      run: echo ${{ steps.docker_build.outputs.digest }}
