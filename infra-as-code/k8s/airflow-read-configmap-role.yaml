@@ -1,0 +1,34 @@
+# Create a ServiceAccount for Airflow scheduler
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: airflow-scheduler
+  namespace: airflow
+
+---
+# Create a Role with ConfigMap read permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: airflow
+  name: airflow-configmap-reader
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch"]
+
+---
+# Bind the role to the service account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: airflow-configmap-binding
+  namespace: airflow
+subjects:
+- kind: ServiceAccount
+  name: airflow-scheduler
+  namespace: airflow
+roleRef:
+  kind: Role
+  name: airflow-configmap-reader
+  apiGroup: rbac.authorization.k8s.io

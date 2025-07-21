@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "daily-pipeline-car-crash"
+version = "0.1.0"
+description = "Daily pipeline analysing car crashes in chicago"
+authors = ["vishnu rao"]
+license = "MIT license"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+sodapy = "^2.2.0"
+pandas = "^2.2.3"
+pyarrow = "^19.0.1"
+tabulate = "^0.9.0"
+duckdb = "^1.2.2"
+isort = "^6.0.1"
+pyspark = "3.5.2"
+datasketches = "5.1.1"
+grpcio-status = "^1.71.0"
+apache-airflow = "2.10.5"
+apache-airflow-providers-cncf-kubernetes = "10.6.0"
+s3fs = "^2025.5.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+flake8-bugbear = "^24.12.12"
+black = "^25.1.0"
+isort = "^6.0.1"
+flake8 = "^7.2.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

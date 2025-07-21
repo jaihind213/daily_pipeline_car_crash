@@ -1,0 +1,86 @@
+name: Run Compilation and Tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: docker.io/jaihind213
+  IMAGE_NAME: daily_pipeline_car_crash
+  IMAGE_DESCRIPTION: image for processing daily car crashes in chicago
+  IMAGE_TITLE: chicago_daily_Car_crash
+
+jobs:
+  compile_test:
+    runs-on: ubuntu-latest
+    environment: cicd
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    - name: 🐍 let Pythons play
+      run: |
+        echo `pwd`
+        ls -lah        
+        python -m pip install --upgrade pip
+        pip install pytest==8.3.2
+        pip install isort==5.13.2
+        pip install flake8-bugbear==24.4.26
+        pip install black==24.4.2
+        pip install flake8==7.1.0
+
+        pip install --upgrade poetry==1.6.1
+        poetry export --without-hashes --format=requirements.txt > requirements.txt 
+        pip install -r requirements.txt
+    - name: 🚧 isort,flake,black check
+      run: |
+        isort --profile=black --check .
+        black --check .
+        flake8 --format=pylint --max-line-length 88 .
+    - name: 👀 Tests
+      run: |
+        export SOCRATA_APP_TOKEN=${{ secrets.SOCRATA_APP_TOKEN }}
+        pytest .
+    - name: try to build image
+      run: |
+        sh download_spark_deps.sh
+        export PUSH_REPO=local
+        export PUSH_LATEST_TAG=no
+        export PLATFORM=linux/amd64
+        export image_to_build=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}_test
+        export VERSION=0.0.1
+        sh build-docker.sh $VERSION $image_to_build
+        trivy ||echo 'trivy does not exist'
+    - name: Generate image tags and labels
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        flavor: |
+          latest=true
+        tags: |
+          # TODO type=raw,value=${{ needs.build_flow.outputs.version }}
+          type=sha
+          type=ref,event=tag
+          type=ref,event=branch
+        labels: |
+          org.opencontainers.image.title=${{ env.IMAGE_TITLE }}
+          org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}
+          org.opencontainers.image.version={{sha}}
+    - name: Build docker image and push
+      if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+      id: docker_build
+      uses: docker/build-push-action@v5
+      with:
+        context: ./
+        #file: ./Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+    - name: 🔥Tear down
+      run: |
+        docker-compose down -v || echo "tried to do docker compose down, it errored out. no worries"
