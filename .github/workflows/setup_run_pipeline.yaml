@@ -220,6 +220,15 @@ jobs:
         run: |
           cd infra-as-code/k8s/app_configs
           kubectl apply -n airflow -f common_config_map.yaml
+          IMAGE=$(kubectl get configmap image-config-map -n airflow -o jsonpath="{.data.image}")
+          for NODE in $(kubectl get nodes -o name); do
+            echo "Pulling image $IMAGE on $NODE"
+            
+            kubectl debug "$NODE" \
+              --image="$IMAGE" \
+              --image-pull-policy=Always \
+              -- sleep 10
+          done
           kubectl apply -n airflow -f cubes_job_config_map.yaml
           kubectl apply -n airflow -f ingest_job_config_map.yaml
           cd ../
