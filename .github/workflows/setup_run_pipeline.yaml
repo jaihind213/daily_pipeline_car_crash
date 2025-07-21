@@ -5,6 +5,11 @@ on:
 #    branches:
 #      - dev
   workflow_dispatch:
+    inputs:
+      should_tear_down:
+        description: 'teardown environment ?'
+        required: true
+        default: 'true'
   schedule:
     - cron: '0 7 * * *'  # Runs daily at 2:00 AM GMT
 
@@ -363,6 +368,10 @@ jobs:
           doctl kubernetes cluster kubeconfig save ${{ needs.setup_infra.outputs.k8s_cluster_id }}
       - name: 💥tear down all resources
         run: |
+          if [ "${{ github.event.inputs.should_tear_down }}" != "true" ]; then
+            echo "Skipping tear down as per input. to be used for debugging"
+            exit 0
+          fi
           cd infra-as-code
           pulumi stack select ${{ env.PULUMI_STACK_NAME }}
           echo "Deleting airflow load balancer service..."
