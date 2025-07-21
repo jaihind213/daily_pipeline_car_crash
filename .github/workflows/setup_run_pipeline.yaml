@@ -1,9 +1,9 @@
 name: Setup & Run Daily Chicago Car Crash Pipeline
 
 on:
-#  push:
-#    branches:
-#      - dev
+  push:
+    branches:
+      - revert_image
   workflow_dispatch:
   schedule:
     - cron: '0 7 * * *'  # Runs daily at 2:00 AM GMT
