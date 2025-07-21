@@ -1,13 +1,16 @@
 import logging
+import os
 
 import pulumi
 import pulumi_digitalocean as do
 
 region = "sgp1"
-project_name = "first-project"
-cluster_name = "k8s-1-33-1-do-1-sgp1-1752378431833"
+project_name = os.environ.get("PROJECT_NAME", "first-project")
+cluster_name = os.environ.get(
+    "KUBERNETES_CLUSTER_ID", "k8s-1-33-1-do-1-sgp1-1752378431833"
+)
 version = "1.33.1-do.1"
-pool_name = "pool-l7g14a0wb"
+pool_name = os.environ.get("KUBERNETES_POOL_ID", "pool-l7g14a0wb")
 tags = ["k8s", "testing", project_name]
 node_size = "s-2vcpu-4gb"
 num_nodes = 3
