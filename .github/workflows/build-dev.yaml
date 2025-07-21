@@ -8,7 +8,8 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY: docker.io/jaihind213
+  REGISTRY: docker.io
+  DOCKER_USER: jaihind213
   IMAGE_NAME: daily_pipeline_car_crash
   IMAGE_DESCRIPTION: image for processing daily car crashes in chicago
   IMAGE_TITLE: chicago_daily_Car_crash
@@ -36,6 +37,12 @@ jobs:
         pip install --upgrade poetry==1.6.1
         poetry export --without-hashes --format=requirements.txt > requirements.txt 
         pip install -r requirements.txt
+    - name: Login to registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ env.DOCKER_USER }}
+        password: ${{ secrets.DOCKER_TOKEN }}
     - name: 🚧 isort,flake,black check
       run: |
         isort --profile=black --check .
@@ -51,7 +58,7 @@ jobs:
         export PUSH_REPO=local
         export PUSH_LATEST_TAG=no
         export PLATFORM=linux/amd64
-        export image_to_build=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}_test
+        export image_to_build=${{ env.REGISTRY }}/${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}_test
         export VERSION=0.0.1
         sh build-docker.sh $VERSION $image_to_build
         trivy ||echo 'trivy does not exist'
@@ -59,7 +66,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v4
       with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        images: ${{ env.REGISTRY }}/${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}
         flavor: |
           latest=true
         tags: |
