@@ -1,4 +1,4 @@
-name: Testing Chicago Car Crash Pipeline
+name: Daily Chicago Car Crash Pipeline
 
 on:
   push:
