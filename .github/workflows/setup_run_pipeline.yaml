@@ -72,7 +72,7 @@ jobs:
           echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_ENV
           echo ${{ env.PULUMI_STACK_NAME }}
           #k8s-1-33-1-do-1-sgp1-1752378431833
-          str1="k8s-1-33-1-do-1-sgp1-"
+          str1="k8s-1-33-1-do-1-sgp1"
           str2=${{ env.PULUMI_STACK_NAME }}
           random_num=$(( RANDOM % 9 + 1 ))$(printf "%012d" $RANDOM$RANDOM | cut -c1-12)   
           #export KUBERNETES_CLUSTER_ID="$str1-$str2-$rand_num"
