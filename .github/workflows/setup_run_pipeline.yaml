@@ -58,8 +58,8 @@ jobs:
         id: setup_up_pulumi_stack
         run: |
           cd infra-as-code
-          export PULUMI_STACK_NAME=${{ github.event.inputs.stack_name }}
-          echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_ENV
+          export PULUMI_STACK_NAME=${{ env.PULUMI_STACK_NAME }}
+          #echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_ENV
           pulumi stack select $PULUMI_STACK_NAME || pulumi stack init $PULUMI_STACK_NAME
           pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
           pulumi refresh --yes
@@ -73,7 +73,7 @@ jobs:
       - name: 🚚Deploy with Pulumi
         id: deploy_pulumi_stack
         run: |
-          export PULUMI_STACK_NAME=${{ github.event.inputs.stack_name }}
+          export PULUMI_STACK_NAME=${{ env.PULUMI_STACK_NAME }}
           cd infra-as-code
           pulumi up --yes
           #pulumi stack select prod
