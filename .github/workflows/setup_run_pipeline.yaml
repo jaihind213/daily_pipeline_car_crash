@@ -73,7 +73,7 @@ jobs:
           echo ${{ env.PULUMI_STACK_NAME }}
           #k8s-1-33-1-do-1-sgp1-1752378431833
           str1="k8s-1-sgp1"
-          str2="pdord"
+          str2=${{ env.PULUMI_STACK_NAME }}
           rand_num=$(od -An -N4 -tu4 < /dev/urandom | xargs)   
           export KUBERNETES_CLUSTER_ID="$str1-$str2-$rand_num"
           export KUBERNETES_POOL_ID="k8-pool-$rand_num"
