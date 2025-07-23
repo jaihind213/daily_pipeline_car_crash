@@ -65,13 +65,26 @@ jobs:
       - name: Create K8s cluster id
         run: |
           export PULUMI_STACK_NAME=${{ github.event.inputs.stack_name }}
+          if [ -z "$PULUMI_STACK_NAME" ]; then
+            echo "PULUMI_STACK_NAME is not set, using default 'prod'"
+            export PULUMI_STACK_NAME="prod"
+          fi
           echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_ENV
           echo ${{ env.PULUMI_STACK_NAME }}
+          #k8s-1-33-1-do-1-sgp1-1752378431833
+          str1="k8s-1-sgp1"
+          str2="pdord"
+          rand_num=$(od -An -N4 -tu4 < /dev/urandom | xargs)   
+          export KUBERNETES_CLUSTER_ID="$str1-$str2-$rand_num"
+          export KUBERNETES_POOL_ID="k8-pool-$rand_num"
+          echo "will use k8s_cluster_id_to_use=$KUBERNETES_CLUSTER_ID"
+          echo "KUBERNETES_CLUSTER_ID=$KUBERNETES_CLUSTER_ID" >> $GITHUB_ENV
+          echo "KUBERNETES_POOL_ID=$KUBERNETES_POOL_ID" >> $GITHUB_ENV
       - name: 🏗️Set up Pulumi stack
         id: setup_up_pulumi_stack
         run: |
           cd infra-as-code
-          #export PULUMI_STACK_NAME=${{ env.PULUMI_STACK_NAME }}
+          export PULUMI_STACK_NAME=${{ env.PULUMI_STACK_NAME }}
           #echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_ENV
           pulumi stack select $PULUMI_STACK_NAME || pulumi stack init $PULUMI_STACK_NAME
           pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
@@ -87,6 +100,8 @@ jobs:
         id: deploy_pulumi_stack
         run: |
           export PULUMI_STACK_NAME=${{ env.PULUMI_STACK_NAME }}
+          export KUBERNETES_CLUSTER_ID=${{ env.KUBERNETES_CLUSTER_ID }}
+          export KUBERNETES_POOL_ID=${{ env.KUBERNETES_POOL_ID }}
           cd infra-as-code
           pulumi up --yes
           #pulumi stack select prod
