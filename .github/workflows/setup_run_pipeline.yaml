@@ -5,15 +5,6 @@ on:
 #    branches:
 #      - dev
   workflow_dispatch:
-    inputs:
-      should_tear_down:
-        description: 'teardown environment ?'
-        required: true
-        default: 'true'
-      stack_name:
-        description: 'stack name ?'
-        required: true
-        default: 'dev'
   schedule:
     - cron: '0 7 * * *'  # Runs daily at 2:00 AM GMT
 
@@ -21,7 +12,7 @@ env:
   K8S_BOOTUP_TIME_SEC: 180
   DAG_RUN_TIME_SEC: 540 # 9 minutes
   DAG_NAME: chicago_car_crash_pipeline
-  #PULUMI_STACK_NAME: prod
+  PULUMI_STACK_NAME: prod
 jobs:
   setup_infra:
     runs-on: ubuntu-latest
@@ -375,13 +366,7 @@ jobs:
           doctl kubernetes cluster kubeconfig save ${{ needs.setup_infra.outputs.k8s_cluster_id }}
       - name: 💥tear down all resources
         run: |
-          if [ "${{ github.event.inputs.should_tear_down }}" != "true" ]; then
-            echo "Skipping tear down as per input. to be used for debugging"
-            exit 0
-          fi
           cd infra-as-code
-          export PULUMI_STACK_NAME=${{ github.event.inputs.stack_name }}
-          echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_ENV
           pulumi stack select ${{ env.PULUMI_STACK_NAME }}
           echo "Deleting airflow load balancer service..."
           kubectl -n airflow delete svc airflow-lb --ignore-not-found
