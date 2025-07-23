@@ -5,6 +5,15 @@ on:
 #    branches:
 #      - dev
   workflow_dispatch:
+    inputs:
+      should_tear_down:
+        description: 'teardown environment ?'
+        required: true
+        default: 'true'
+      stack_name:
+        description: 'stack name ?'
+        required: true
+        default: 'dev'
   schedule:
     - cron: '0 7 * * *'  # Runs daily at 2:00 AM GMT
 
@@ -53,12 +62,16 @@ jobs:
         run: pulumi login
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-
+      - name: Create K8s cluster id
+        run: |
+          export PULUMI_STACK_NAME=${{ github.event.inputs.stack_name }}
+          echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_ENV
+          echo ${{ env.PULUMI_STACK_NAME }}
       - name: 🏗️Set up Pulumi stack
         id: setup_up_pulumi_stack
         run: |
           cd infra-as-code
-          export PULUMI_STACK_NAME=${{ env.PULUMI_STACK_NAME }}
+          #export PULUMI_STACK_NAME=${{ env.PULUMI_STACK_NAME }}
           #echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_ENV
           pulumi stack select $PULUMI_STACK_NAME || pulumi stack init $PULUMI_STACK_NAME
           pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
