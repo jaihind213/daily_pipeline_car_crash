@@ -5,12 +5,21 @@ on:
 #    branches:
 #      - dev
   workflow_dispatch:
+    inputs:
+      should_tear_down:
+        description: 'teardown environment ?'
+        required: true
+        default: 'true'
+      stack_name:
+        description: 'stack name ?'
+        required: true
+        default: 'dev'
   schedule:
     - cron: '0 7 * * *'  # Runs daily at 2:00 AM GMT
 
 env:
   K8S_BOOTUP_TIME_SEC: 180
-  DAG_RUN_TIME_SEC: 900
+  DAG_RUN_TIME_SEC: 540 # 9 minutes
   DAG_NAME: chicago_car_crash_pipeline
   PULUMI_STACK_NAME: prod
 jobs:
@@ -53,12 +62,31 @@ jobs:
         run: pulumi login
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-
+      - name: Create K8s cluster id
+        run: |
+          export PULUMI_STACK_NAME=${{ github.event.inputs.stack_name }}
+          if [ -z "$PULUMI_STACK_NAME" ]; then
+            echo "PULUMI_STACK_NAME is not set, using default 'prod'"
+            export PULUMI_STACK_NAME="prod"
+          fi
+          echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_ENV
+          echo ${{ env.PULUMI_STACK_NAME }}
+          #k8s-1-33-1-do-1-sgp1-1752378431833
+          str1="k8s-1-sgp1"
+          str2=${{ env.PULUMI_STACK_NAME }}
+          rand_num=$(od -An -N4 -tu4 < /dev/urandom | xargs)   
+          export KUBERNETES_CLUSTER_ID="$str1-$str2-$rand_num"
+          export KUBERNETES_POOL_ID="k8-pool-$rand_num"
+          echo "will use k8s_cluster_id_to_use=$KUBERNETES_CLUSTER_ID"
+          echo "KUBERNETES_CLUSTER_ID=$KUBERNETES_CLUSTER_ID" >> $GITHUB_ENV
+          echo "KUBERNETES_POOL_ID=$KUBERNETES_POOL_ID" >> $GITHUB_ENV
       - name: 🏗️Set up Pulumi stack
         id: setup_up_pulumi_stack
         run: |
           cd infra-as-code
-          pulumi stack select ${{ env.PULUMI_STACK_NAME }} || pulumi stack init ${{ env.PULUMI_STACK_NAME }}
+          export PULUMI_STACK_NAME=${{ env.PULUMI_STACK_NAME }}
+          #echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_ENV
+          pulumi stack select $PULUMI_STACK_NAME || pulumi stack init $PULUMI_STACK_NAME
           pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
           pulumi refresh --yes
           OUTPUT=$(pulumi stack output k8s_cluster_id || echo "")
@@ -71,6 +99,9 @@ jobs:
       - name: 🚚Deploy with Pulumi
         id: deploy_pulumi_stack
         run: |
+          export PULUMI_STACK_NAME=${{ env.PULUMI_STACK_NAME }}
+          export KUBERNETES_CLUSTER_ID=${{ env.KUBERNETES_CLUSTER_ID }}
+          export KUBERNETES_POOL_ID=${{ env.KUBERNETES_POOL_ID }}
           cd infra-as-code
           pulumi up --yes
           #pulumi stack select prod
@@ -220,6 +251,15 @@ jobs:
         run: |
           cd infra-as-code/k8s/app_configs
           kubectl apply -n airflow -f common_config_map.yaml
+          IMAGE=$(kubectl get configmap image-config-map -n airflow -o jsonpath="{.data.image}")
+          for NODE in $(kubectl get nodes -o name); do
+            echo "Pulling image $IMAGE on $NODE"
+            
+            kubectl debug "$NODE" \
+              --image="$IMAGE" \
+              --image-pull-policy=Always \
+              -- sleep 10
+          done
           kubectl apply -n airflow -f cubes_job_config_map.yaml
           kubectl apply -n airflow -f ingest_job_config_map.yaml
           cd ../

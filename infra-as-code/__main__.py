@@ -5,6 +5,7 @@ import pulumi
 import pulumi_digitalocean as do
 
 region = "sgp1"
+stack_name = os.environ.get("PULUMI_STACK_NAME", "prod")
 project_name = os.environ.get("PROJECT_NAME", "first-project")
 cluster_name = os.environ.get(
     "KUBERNETES_CLUSTER_ID", "k8s-1-33-1-do-1-sgp1-1752378431833"
