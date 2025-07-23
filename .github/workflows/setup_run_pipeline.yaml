@@ -72,10 +72,11 @@ jobs:
           echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_ENV
           echo ${{ env.PULUMI_STACK_NAME }}
           #k8s-1-33-1-do-1-sgp1-1752378431833
-          str1="k8s-1-sgp1"
+          str1="k8s-1-33-1-do-1-sgp1-"
           str2=${{ env.PULUMI_STACK_NAME }}
           rand_num=$(od -An -N4 -tu4 < /dev/urandom | xargs)   
-          export KUBERNETES_CLUSTER_ID="$str1-$str2-$rand_num"
+          #export KUBERNETES_CLUSTER_ID="$str1-$str2-$rand_num"
+          export KUBERNETES_CLUSTER_ID="$str1-$str2"
           export KUBERNETES_POOL_ID="k8-pool-$rand_num"
           echo "will use k8s_cluster_id_to_use=$KUBERNETES_CLUSTER_ID"
           echo "KUBERNETES_CLUSTER_ID=$KUBERNETES_CLUSTER_ID" >> $GITHUB_ENV
