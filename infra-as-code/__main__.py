@@ -12,7 +12,7 @@ cluster_name = os.environ.get(
 )
 version = "1.33.1-do.2"
 pool_name = os.environ.get("KUBERNETES_POOL_ID", "pool-k81x1jrz8")
-tags = ["k8s", "testing", project_name, stack_name]
+tags = ["k8s", "testing", project_name, f"pulumi_stack_{stack_name}"]
 node_size = "s-2vcpu-4gb"
 num_nodes = 3
 
