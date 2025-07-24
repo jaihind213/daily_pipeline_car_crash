@@ -21,7 +21,7 @@ env:
   K8S_BOOTUP_TIME_SEC: 180
   DAG_RUN_TIME_SEC: 540 # 9 minutes
   DAG_NAME: chicago_car_crash_pipeline
-  PULUMI_STACK_NAME: prod
+  #PULUMI_STACK_NAME: prod
 jobs:
   setup_infra:
     runs-on: ubuntu-latest
@@ -399,7 +399,7 @@ jobs:
       - name: 💥tear down all resources
         run: |
           cd infra-as-code
-          pulumi stack select ${{ env.PULUMI_STACK_NAME }} || pulumi stack init ${{ env.PULUMI_STACK_NAME }}
+          pulumi stack select ${{ env.PULUMI_STACK_NAME }}
           pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
           pulumi refresh --yes
           echo "Deleting airflow load balancer service..."
