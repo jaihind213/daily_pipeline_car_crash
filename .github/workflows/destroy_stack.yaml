@@ -17,7 +17,7 @@ env:
   DAG_NAME: chicago_car_crash_pipeline
   #PULUMI_STACK_NAME: prod
 jobs:
-  setup_infra:
+  destroy_infra:
     runs-on: ubuntu-latest
     outputs:
       k8s_cluster_id: ${{ steps.deploy_pulumi_stack.outputs.cluster_id }}
@@ -63,27 +63,21 @@ jobs:
           cd infra-as-code
           export PULUMI_STACK_NAME=${{ github.event.inputs.stack_name }}
           echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_ENV
+          echo "1..."
           pulumi stack select $PULUMI_STACK_NAME || pulumi stack init $PULUMI_STACK_NAME
+          echo "2..."
           pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
-          pulumi refresh --yes
+          echo "3..."
+          pulumi refresh --yes --stack $PULUMI_STACK_NAME
+          echo "4..."
           OUTPUT=$(pulumi stack output k8s_cluster_id || echo "")
           if [ -n "$OUTPUT" ]; then
             echo "K8S_CLUSTER_ID=$OUTPUT" >> $GITHUB_ENV
             echo "✅ Exported K8S_CLUSTER_ID"
-            #export K8S_CLUSTER_ID=$OUTPUT
-            #echo "cluster_id=$K8S_CLUSTER_ID" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Failed to export K8S_CLUSTER_ID"
+            exit 1
           fi
-      - name: 🚚Deploy with Pulumi
-        id: deploy_pulumi_stack
-        run: |
-          export PULUMI_STACK_NAME=${{ github.event.inputs.stack_name }}
-          cd infra-as-code
-          pulumi up --yes
-          #pulumi stack select prod
-          #pulumi destroy --remove --yes
-          K8S_CLUSTER_ID=$(pulumi stack output k8s_cluster_id || echo "")
-          echo "K8S_CLUSTER_ID=$K8S_CLUSTER_ID" >> $GITHUB_ENV
-          echo "cluster_id=$K8S_CLUSTER_ID" >> $GITHUB_OUTPUT
       - name: 💾Save DigitalOcean kubeconfig
         run: |
           cd infra-as-code
@@ -91,13 +85,10 @@ jobs:
       - name: 💥tear down all resources
         run: |
           cd infra-as-code
-          export PULUMI_STACK_NAME=${{ github.event.inputs.stack_name }}
-          echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_ENV
-          pulumi stack select ${{ env.PULUMI_STACK_NAME }}
           echo "Deleting airflow load balancer service..."
           kubectl -n airflow delete svc airflow-lb --ignore-not-found
-          helm uninstall spark-operator -n spark-operator 
-          helm uninstall airflow -n airflow
+          helm uninstall spark-operator -n spark-operator --ignore-not-found
+          helm uninstall airflow -n airflow --ignore-not-found
           kubectl delete all --all  --wait=true --timeout=0s
           sleep 180
           kubectl delete pvc --all
