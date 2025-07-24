@@ -399,7 +399,7 @@ jobs:
       - name: 💥tear down all resources
         run: |
           cd infra-as-code
-          pulumi stack select ${{ env.PULUMI_STACK_NAME }}
+          #pulumi stack select ${{ env.PULUMI_STACK_NAME }}
           echo "Deleting airflow load balancer service..."
           kubectl -n airflow delete svc airflow-lb --ignore-not-found
           helm uninstall spark-operator -n spark-operator 
