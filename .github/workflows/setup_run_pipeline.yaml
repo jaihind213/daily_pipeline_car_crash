@@ -75,7 +75,7 @@ jobs:
           #pool-k81x1jrz8
           prefix="k8s-1-33-1-do-2-sgp1"
           random_num=$(( RANDOM % 9 + 1 ))$(printf "%012d" $RANDOM$RANDOM | cut -c1-12)   
-          rand_str=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 9)
+          rand_str=$(echo $(tr -dc 'a-z' </dev/urandom | head -c1)$(tr -dc 'a-z0-9' </dev/urandom | head -c8))
           export KUBERNETES_CLUSTER_ID="$prefix-$random_num"
           export KUBERNETES_POOL_ID="pool-$rand_str"
           echo "will use k8s_cluster_id_to_use=$KUBERNETES_CLUSTER_ID"
