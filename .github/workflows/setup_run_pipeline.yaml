@@ -399,7 +399,7 @@ jobs:
       - name: 💥tear down all resources
         run: |
           cd infra-as-code
-          pulumi stack select ${{ env.PULUMI_STACK_NAME }}
+          pulumi stack select ${{ github.event.inputs.stack_name }}
           pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
           pulumi refresh --yes
           echo "Deleting airflow load balancer service..."
