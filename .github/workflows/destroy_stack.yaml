@@ -64,8 +64,8 @@ jobs:
           export PULUMI_STACK_NAME=${{ github.event.inputs.stack_name }}
           echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_ENV
           pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
-          pulumi stack select $PULUMI_STACK_NAME
-          pulumi refresh --yes
+          #pulumi stack select $PULUMI_STACK_NAME
+          pulumi refresh --yes --stack $PULUMI_STACK_NAME
           OUTPUT=$(pulumi stack output k8s_cluster_id || echo "")
           if [ -n "$OUTPUT" ]; then
             echo "K8S_CLUSTER_ID=$OUTPUT" >> $GITHUB_ENV
