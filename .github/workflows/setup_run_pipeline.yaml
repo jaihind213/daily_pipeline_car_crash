@@ -15,7 +15,7 @@ on:
         required: true
         default: 'prod'
   schedule:
-    - cron: '0 7 * * *'  # Runs daily at 2:00 AM GMT
+    - cron: '0 9 15 * *'  # Runs daily at 2:00 AM GMT
 
 env:
   K8S_BOOTUP_TIME_SEC: 180
@@ -399,7 +399,12 @@ jobs:
       - name: 💥tear down all resources
         run: |
           cd infra-as-code
-          pulumi stack select ${{ github.event.inputs.stack_name }}
+          export PULUMI_STACK_NAME=${{ github.event.inputs.stack_name }}
+          if [ -z "$PULUMI_STACK_NAME" ]; then
+            echo "PULUMI_STACK_NAME is not set, using default 'prod'"
+            export PULUMI_STACK_NAME="prod"
+          fi
+          pulumi stack select $PULUMI_STACK_NAME
           pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
           pulumi refresh --yes
           echo "Deleting airflow load balancer service..."
