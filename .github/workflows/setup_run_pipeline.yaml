@@ -15,7 +15,7 @@ on:
         required: true
         default: 'prod'
   schedule:
-    - cron: '0 1 * * *'  # Runs daily at 2:00 AM GMT
+    - cron: '0 2 * * *'  # Runs daily at 2:00 AM GMT
 
 env:
   K8S_BOOTUP_TIME_SEC: 180
