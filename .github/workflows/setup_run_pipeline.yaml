@@ -400,6 +400,11 @@ jobs:
         run: |
           cd infra-as-code
           export PULUMI_STACK_NAME=${{ github.event.inputs.stack_name }}
+          export TEAR_DOWN=${{ github.event.inputs.should_tear_down }}
+          if [ "$TEAR_DOWN" != "true" ]; then
+            echo "Skipping tear down as per input."
+            exit 0
+          fi
           if [ -z "$PULUMI_STACK_NAME" ]; then
             echo "PULUMI_STACK_NAME is not set, using default 'prod'"
             export PULUMI_STACK_NAME="prod"
