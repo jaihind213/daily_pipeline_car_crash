@@ -85,7 +85,9 @@ with DAG(
     )
 
     # # Create application files
-    ingest_job_main_file = "local:///opt/daily_pipeline_car_crash/car_crash/ingest_job.py"
+    ingest_job_main_file = (
+        "local:///opt/daily_pipeline_car_crash/car_crash/ingest_job.py"
+    )
     ingest_job_args = [
         "/opt/daily_pipeline_car_crash/config/default_job_config.ini",
         "{{ params.date }}",
