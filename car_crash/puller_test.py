@@ -3,7 +3,7 @@ import shutil
 
 import duckdb
 
-from puller import pull_chicago_dataset
+from car_crash.puller import pull_chicago_dataset
 
 os.environ["TZ"] = "GMT"
 

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 import pytz
 
-from date_util import get_default_job_date, get_job_date
+from car_crash.date_util import get_default_job_date, get_job_date
 
 
 def test_get_default_job_date():
