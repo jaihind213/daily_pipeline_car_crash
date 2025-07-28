@@ -5,7 +5,7 @@ metadata:
   namespace: airflow
 data:
   #image: jaihind213/daily_pipeline_car_crash:1.0.0
-  image: jaihind213/daily_pipeline_car_crash:sha-5f5c824
+  image: jaihind213/daily_pipeline_car_crash:sha-bad0fbf
   #image: jaihind213/daily_pipeline_car_crash:0.0.41-0.1
 ---
 apiVersion: v1
