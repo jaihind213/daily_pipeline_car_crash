@@ -54,12 +54,13 @@ jobs:
         pytest .
     - name: try to build image
       run: |
-        sh download_spark_deps.sh
+        sh scripts/download_spark_deps.sh ./spark_jars
         export PUSH_REPO=local
         export PUSH_LATEST_TAG=no
         export PLATFORM=linux/amd64
         export image_to_build=${{ env.REGISTRY }}/${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}_test
         export VERSION=0.0.1
+        cp scripts/build-docker.sh .
         sh build-docker.sh $VERSION $image_to_build
         trivy ||echo 'trivy does not exist'
     - name: Generate image tags and labels

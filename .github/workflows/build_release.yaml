@@ -35,7 +35,7 @@ jobs:
         pip install --upgrade poetry==1.6.1
         poetry export --without-hashes --format=requirements.txt > requirements.txt 
         pip install -r requirements.txt
-        sh download_spark_deps.sh
+        sh scripts/download_spark_deps.sh ./spark_jars
     - name: Login to registry
       uses: docker/login-action@v3
       with:
