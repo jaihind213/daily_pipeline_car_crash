@@ -343,10 +343,12 @@ jobs:
           export AIRFLOW_LB_IP=$EXTERNAL_IP
           echo "AIRFLOW_LB_IP=$AIRFLOW_LB_IP" >> $GITHUB_ENV
           sleep 300
+          cd scripts
           bash trigger_dag.sh ${{ env.DAG_NAME }} ${{ env.DAG_COMPUTE_DATE }} ${{ secrets.AF_USER }} ${{ secrets.AF_KEY }} $AIRFLOW_LB_IP
           sleep ${{ env.DAG_RUN_TIME_SEC }}
       - name: 🟢🔴🟢 Check airflow dag status
         run: |
+          cd scripts
           RUN_ID=`cat /tmp/dag_run_id`
           echo "RUN_ID=$RUN_ID"
           bash check_dag_status.sh ${{ env.DAG_NAME }} $RUN_ID ${{ secrets.AF_USER }} ${{ secrets.AF_KEY }} ${{ env.AIRFLOW_LB_IP }}
