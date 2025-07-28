@@ -23,7 +23,7 @@ COPY car_crash/*.py /opt/daily_pipeline_car_crash/car_crash
 
 # Install Python dependencies
 RUN python3 -m pip config set global.break-system-packages true \
- && pip3 install --no-cache-dir -r /opt/daily_pipeline_car_crash/requirements.txt
+ && pip3 install --no-cache-dir -r /opt/daily_pipeline_car_crash/car_crash/requirements.txt
 
 # Set permissions
 RUN chown -R ${spark_uid}:${spark_uid} /opt/daily_pipeline_car_crash \
