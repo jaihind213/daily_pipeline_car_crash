@@ -1,10 +1,11 @@
 #!/bin/sh
 
+JAR_FOLDER=$1
 # keep hadoop version same as spark distribution
 # iceberg currently works with java11
 HADOOP_VERSION=3.3.4
 ICEBERG_VERSION=1.6.1
-cd spark_jars
+cd $JAR_FOLDER
 echo "Downloading Spark dependencies..."
 
 wget -nc https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.787/aws-java-sdk-bundle-1.12.787.jar

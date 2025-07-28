@@ -11,8 +11,8 @@ from pyspark.sql.types import (
     TimestampType,
 )
 
-from utilz import is_am  # noqa: E501
-from utilz import get_damage_estimate, get_is_yes_no, was_airbag_deployed
+from car_crash.utilz import is_am  # noqa: E501
+from car_crash.utilz import get_damage_estimate, get_is_yes_no, was_airbag_deployed
 
 # Define UDF to get damage estimate
 get_damage_udf = udf(get_damage_estimate, IntegerType())

@@ -1,7 +1,7 @@
 import datetime
 
-from utilz import parse_damage  # noqa: E501
-from utilz import get_is_yes_no, get_output_path, was_airbag_deployed
+from car_crash.utilz import parse_damage  # noqa: E501
+from car_crash.utilz import get_is_yes_no, get_output_path, was_airbag_deployed
 
 
 def test_get_output_path():
