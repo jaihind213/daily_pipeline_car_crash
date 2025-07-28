@@ -9,6 +9,7 @@ from airflow.providers.cncf.kubernetes.operators.spark_kubernetes import (
     SparkKubernetesOperator,
 )
 from airflow.providers.cncf.kubernetes.utils.pod_manager import OnFinishAction
+from kubernetes.client import V1EnvVar
 from kubernetes.client import models as k8s
 
 # Step 1: DAG definition
@@ -82,6 +83,9 @@ with DAG(
         volumes=[common_config_volume],
         volume_mounts=[common_config_volume_mount],
         startup_timeout_seconds=300,
+        env_vars=[
+            V1EnvVar(name="PYTHONPATH", value="/opt/daily_pipeline_car_crash"),
+        ],
     )
 
     # # Create application files
