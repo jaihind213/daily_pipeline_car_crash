@@ -6,7 +6,7 @@ ARG spark_uid=185
 
 # Set up environment
 USER root
-WORKDIR /opt/daily_pipeline_car_crash/car_crash
+WORKDIR /opt/daily_pipeline_car_crash
 
 # Create required directories
 RUN mkdir -p /opt/daily_pipeline_car_crash/config \
