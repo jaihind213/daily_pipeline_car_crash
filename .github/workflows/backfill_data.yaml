@@ -14,6 +14,10 @@ on:
         description: 'stack name ?'
         required: true
         default: 'prod'
+      sleep_time:
+        description: 'time to sleep before checking status ?'
+        required: true
+        default: "360"
 
 env:
   K8S_BOOTUP_TIME_SEC: 180
@@ -113,9 +117,10 @@ jobs:
           echo "AIRFLOW_LB_IP=$AIRFLOW_LB_IP" >> $GITHUB_ENV
           cd scripts
           export DAG_COMPUTE_DATE=${{ github.event.inputs.date_to_run }}
-          
+          export DAG_CHECK_TIME=${{ github.event.inputs.sleep_time }}
+          export SLEEP_TIME_INT=$((DAG_CHECK_TIME + 0))
           bash trigger_dag.sh ${{ env.DAG_NAME }} $DAG_COMPUTE_DATE ${{ secrets.AF_USER }} ${{ secrets.AF_KEY }} $AIRFLOW_LB_IP
-          sleep ${{ env.DAG_RUN_TIME_SEC }}
+          sleep $SLEEP_TIME_INT
       - name: 🟢🔴🟢 Check airflow dag status
         run: |
           cd scripts
