@@ -1,0 +1,125 @@
+name: Backfill Chicago Car Crash Pipeline
+
+on:
+#  push:
+#    branches:
+#      - dev
+  workflow_dispatch:
+    inputs:
+      date_to_run:
+        description: 'date in YYYY-MM-DD format to run the backfill for'
+        required: true
+        default: ''
+      stack_name:
+        description: 'stack name ?'
+        required: true
+        default: 'prod'
+
+env:
+  K8S_BOOTUP_TIME_SEC: 180
+  DAG_RUN_TIME_SEC: 540 # 9 minutes
+  DAG_NAME: chicago_car_crash_pipeline
+jobs:
+  trigger_dag:
+    runs-on: ubuntu-latest
+    outputs:
+      k8s_cluster_id: ${{ steps.deploy_pulumi_stack.outputs.cluster_id }}
+    environment: cicd
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.14.0
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DO_TOKEN }}
+
+      - name: 🐍Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          cd infra-as-code
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v4
+        with:
+          pulumi-version: latest
+
+      - name: Login to Pulumi
+        run: pulumi login
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+      - name: 🏗️Set up Pulumi stack
+        id: setup_up_pulumi_stack
+        run: |
+          cd infra-as-code
+          export PULUMI_STACK_NAME=${{ github.event.inputs.stack_name }}
+          echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_ENV
+          echo "1..."
+          pulumi stack select $PULUMI_STACK_NAME || pulumi stack init $PULUMI_STACK_NAME
+          echo "2..."
+          pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
+          echo "3..."
+          pulumi refresh --yes --stack $PULUMI_STACK_NAME
+          echo "4..."
+          OUTPUT=$(pulumi stack output k8s_cluster_id || echo "")
+          if [ -n "$OUTPUT" ]; then
+            echo "K8S_CLUSTER_ID=$OUTPUT" >> $GITHUB_ENV
+            echo "✅ Exported K8S_CLUSTER_ID"
+          else
+            echo "❌ Failed to export K8S_CLUSTER_ID"
+            exit 1
+          fi
+      - name: 💾Save DigitalOcean kubeconfig
+        run: |
+          cd infra-as-code
+          doctl kubernetes cluster kubeconfig save ${{ env.K8S_CLUSTER_ID }}
+      - name: 🔫 trigger & Check airflow dag status
+        run: |
+          export SERVICE_NAME="airflow-lb"
+          export NAMESPACE="airflow"
+          if kubectl get svc "$SERVICE_NAME" -n "$NAMESPACE" >/dev/null 2>&1; then
+            echo "Service $SERVICE_NAME already exists in namespace $NAMESPACE. Skipping expose."
+          else
+            echo "Service $SERVICE_NAME does not exist. Creating..."
+            kubectl -n "$NAMESPACE" expose svc airflow-webserver \
+              --type=LoadBalancer \
+              --name="$SERVICE_NAME"
+          fi
+          #kubectl -n airflow expose svc airflow-webserver --type=LoadBalancer --name=airflow-lb
+          touch airflow-lb-ip.txt
+          EXTERNAL_IP=$(kubectl -n airflow get svc airflow-lb -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null)
+
+          if [ -z "$EXTERNAL_IP" ]; then
+            echo "LoadBalancer IP not assigned or service does not exist. lets wait"
+            sleep 360
+          fi          
+          EXTERNAL_IP=$(kubectl -n airflow get svc airflow-lb -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null)
+          #kubectl -n airflow get svc airflow-lb |grep -v NAME |awk '{print $4}' | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' > airflow-lb-ip.txt
+          #cat airflow-lb-ip.txt
+          #export AIRFLOW_LB_IP=$(cat airflow-lb-ip.txt)
+          export AIRFLOW_LB_IP=$EXTERNAL_IP
+          echo "AIRFLOW_LB_IP=$AIRFLOW_LB_IP" >> $GITHUB_ENV
+          cd scripts
+          export DAG_COMPUTE_DATE=${{ github.event.inputs.date_to_run }}
+          
+          bash trigger_dag.sh ${{ env.DAG_NAME }} $DAG_COMPUTE_DATE ${{ secrets.AF_USER }} ${{ secrets.AF_KEY }} $AIRFLOW_LB_IP
+          sleep ${{ env.DAG_RUN_TIME_SEC }}
+      - name: 🟢🔴🟢 Check airflow dag status
+        run: |
+          cd scripts
+          RUN_ID=`cat /tmp/dag_run_id`
+          echo "RUN_ID=$RUN_ID"
+          bash check_dag_status.sh ${{ env.DAG_NAME }} $RUN_ID ${{ secrets.AF_USER }} ${{ secrets.AF_KEY }} ${{ env.AIRFLOW_LB_IP }}
+
