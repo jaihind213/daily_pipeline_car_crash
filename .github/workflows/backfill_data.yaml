@@ -32,6 +32,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+      - name: Print date
+        run: echo ${{ github.event.inputs.date_to_run }}
 
       - name: Set up Helm
         uses: azure/setup-helm@v3
