@@ -119,6 +119,8 @@ jobs:
           doctl kubernetes cluster kubeconfig save ${{ env.K8S_CLUSTER_ID }}
       - name: ⚠️ Check if k8s nodes ready
         run: |
+          #for safety adding this sleep
+          sleep ${{ env.K8S_BOOTUP_TIME_SEC }}
           export NOT_READY_NODES=$(kubectl get nodes --no-headers | awk '$2 != "Ready"')
           if [ -n "$NOT_READY_NODES" ]; then
             echo "⚠️ Some nodes are NotReady: lets wait"
