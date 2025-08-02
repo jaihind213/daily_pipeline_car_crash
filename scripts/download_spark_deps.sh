@@ -3,6 +3,7 @@
 JAR_FOLDER=$1
 # keep hadoop version same as spark distribution
 # iceberg currently works with java11
+mkdir -p $JAR_FOLDER
 HADOOP_VERSION=3.3.4
 ICEBERG_VERSION=1.6.1
 cd $JAR_FOLDER
