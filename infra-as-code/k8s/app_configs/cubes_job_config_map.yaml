@@ -5,7 +5,7 @@ metadata:
   namespace: airflow
 data:
   driver_cores: "1"
-  driver_memory: "512m"
+  driver_memory: "1536m"
   driver_core_limit: "2200m"
   executor_cores: "1"
   executor_instances: "1"
