@@ -233,10 +233,12 @@ jobs:
           
           #apply app secrets to airflow namespace
           echo '${{ secrets.APP_SECRETS_JSON }}' > secret.json
-          sh infra-as-code/export_app_secrets_to_env.sh secret.json
+          sh infra-as-code/export_app_secrets_to_env.sh secret.json .env_keys
+          source .env_keys
           cd infra-as-code/k8s
           envsubst < dag_secrets_template.yaml | kubectl create  --namespace airflow -f - --dry-run=client -o json | kubeseal --namespace airflow --controller-namespace=sealed-secrets --scope=strict --format=yaml > dag-sealed-secret.yaml
           kubectl apply -f dag-sealed-secret.yaml -n airflow
+          rm -rf .env_keys
       - name: 🌀༄ Airflow setup
         run: |
           cd infra-as-code/airflow
