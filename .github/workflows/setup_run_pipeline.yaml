@@ -231,14 +231,14 @@ jobs:
           kubectl create secret generic git-credentials --namespace airflow  --dry-run=client --from-literal=GIT_SYNC_USERNAME='${{ secrets.GIT_SYNC_USERNAME }}' --from-literal=GITSYNC_USERNAME='${{ secrets.GIT_SYNC_USERNAME }}' --from-literal=GIT_SYNC_PASSWORD='${{ secrets.GIT_SYNC_PASSWORD }}' --from-literal=GITSYNC_PASSWORD='${{ secrets.GIT_SYNC_PASSWORD }}' --from-literal=password=LOL -o json | kubeseal --namespace airflow --controller-namespace=sealed-secrets --scope=strict --format=yaml > my-secret-sealed.yaml
           kubectl apply -f my-secret-sealed.yaml -n airflow
           
-          echo '${{ secrets.COMBINED_SECRET_JSON }}' > secret.json
+          echo '${{ secrets.APP_SECRETS_JSON }}' > secret.json
           sh infra-as-code/export_app_secrets_to_env.sh secret.json
           
-          export SOCRATA_TOKEN=${{ secrets.SOCRATA_APP_TOKEN }}
-          export S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}
-          export S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}
-          export ICEBERG_PATH=${{ secrets.ICEBERG_PATH }}
-          export RAW_DATA_PATH=${{ secrets.RAW_DATA_PATH }}
+#          export SOCRATA_TOKEN=${{ secrets.SOCRATA_APP_TOKEN }}
+#          export S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}
+#          export S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}
+#          export ICEBERG_PATH=${{ secrets.ICEBERG_PATH }}
+#          export RAW_DATA_PATH=${{ secrets.RAW_DATA_PATH }}
           cd infra-as-code/k8s
           envsubst < dag_secrets_template.yaml | kubectl create  --namespace airflow -f - --dry-run=client -o json | kubeseal --namespace airflow --controller-namespace=sealed-secrets --scope=strict --format=yaml > dag-sealed-secret.yaml
           kubectl apply -f dag-sealed-secret.yaml -n airflow
