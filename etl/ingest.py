@@ -3,9 +3,9 @@ from datetime import datetime
 
 from pyspark.sql import functions as F
 
-from car_crash import tables
-from car_crash.transform import transform
-from car_crash.utilz import get_output_path
+from etl import tables
+from etl.transform import transform
+from etl.utilz import get_output_path
 
 
 def ingest_to_iceberg(

@@ -11,7 +11,7 @@ WORKDIR /opt/daily_pipeline_car_crash
 # Create required directories
 RUN mkdir -p /opt/daily_pipeline_car_crash/config \
     && mkdir -p /opt/daily_pipeline_car_crash/data \
-    && mkdir -p /opt/daily_pipeline_car_crash/car_crash \
+    && mkdir -p /opt/daily_pipeline_car_crash/etl \
     && mkdir -p /opt/spark_jars \
     && chmod -R 755 /opt/spark_jars
 
@@ -19,11 +19,11 @@ COPY ./requirements.txt /opt/daily_pipeline_car_crash/car_crash
 COPY ./spark_jars /opt/spark_jars/
 
 # Copy project files
-COPY car_crash/*.py /opt/daily_pipeline_car_crash/car_crash
+COPY etl/*.py /opt/daily_pipeline_car_crash/car_crash
 
 # Install Python dependencies
 RUN python3 -m pip config set global.break-system-packages true \
- && pip3 install --no-cache-dir -r /opt/daily_pipeline_car_crash/car_crash/requirements.txt
+ && pip3 install --no-cache-dir -r /opt/daily_pipeline_car_crash/etl/requirements.txt
 
 # Set permissions
 RUN chown -R ${spark_uid}:${spark_uid} /opt/daily_pipeline_car_crash \

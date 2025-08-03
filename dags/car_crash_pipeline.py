@@ -72,7 +72,7 @@ with DAG(
         image=image_tag,
         cmds=[
             "python3",
-            "car_crash/pull_data_job.py",
+            "etl/pull_data_job.py",
             "/opt/daily_pipeline_car_crash/config/default_job_config.ini",
             "{{ params.date }}",
         ],
@@ -89,9 +89,7 @@ with DAG(
     )
 
     # # Create application files
-    ingest_job_main_file = (
-        "local:///opt/daily_pipeline_car_crash/car_crash/ingest_job.py"
-    )
+    ingest_job_main_file = "local:///opt/daily_pipeline_car_crash/etl/ingest_job.py"
     ingest_job_args = [
         "/opt/daily_pipeline_car_crash/config/default_job_config.ini",
         "{{ params.date }}",
@@ -116,7 +114,7 @@ with DAG(
     )
 
     # # Create application files
-    cubes_job_main_file = "local:///opt/daily_pipeline_car_crash/car_crash/cubes_job.py"
+    cubes_job_main_file = "local:///opt/daily_pipeline_car_crash/etl/cubes_job.py"
     cubes_job_args = [
         "/opt/daily_pipeline_car_crash/config/default_job_config.ini",
         "{{ params.date }}",

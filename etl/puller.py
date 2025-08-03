@@ -9,7 +9,7 @@ import pytz
 import s3fs
 from sodapy import Socrata
 
-from car_crash.utilz import debug_pandas_df
+from etl.utilz import debug_pandas_df
 
 os.environ["TZ"] = "GMT"
 

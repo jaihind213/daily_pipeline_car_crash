@@ -3,12 +3,12 @@ import sys
 import traceback
 from datetime import datetime
 
-from car_crash import utilz
-from car_crash.config import get_config, logger, setup
-from car_crash.date_util import get_job_date
-from car_crash.ingest import ingest_to_iceberg
-from car_crash.metrics import report_job_stats
-from car_crash.utilz import get_output_path
+from etl import utilz
+from etl.config import get_config, logger, setup
+from etl.date_util import get_job_date
+from etl.ingest import ingest_to_iceberg
+from etl.metrics import report_job_stats
+from etl.utilz import get_output_path
 
 if __name__ == "__main__":
     # look in project dir for defaults.
