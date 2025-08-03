@@ -63,7 +63,7 @@ data:
 
     [spark]
     spark.local.dir	 = /tmp/spark-temp
-    spark.master	 = local
+    #spark.master	 = local
     #spark.jars.packages = org.apache.iceberg:iceberg-spark-runtime-3.5_2.13:1.8.1,io.github.jaihind213:spark-set-udaf:spark3.5.2-scala2.13-1.0.1-jdk11,org.apache.hadoop:hadoop-aws:3.4.1
     #hadoop-aws use the same version of hadoop jars in SPARK_HOME/jars
     #set JAVA_HOME/SPARK_HOME in the image
