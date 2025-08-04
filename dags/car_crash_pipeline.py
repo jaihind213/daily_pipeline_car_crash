@@ -12,7 +12,6 @@ from airflow.providers.cncf.kubernetes.utils.pod_manager import OnFinishAction
 from kubernetes.client import V1EnvVar
 from kubernetes.client import models as k8s
 
-# Step 1: DAG definition
 default_args = {
     "owner": "airflow",
     "depends_on_past": False,
@@ -54,13 +53,13 @@ with DAG(
     )
     logging.info("image being used: %s", image_tag)
 
-    pull_image = KubernetesPodOperator(
-        task_id="pull_image",
+    print_image_details = KubernetesPodOperator(
+        task_id="print_image_details",
         name="pull_image",
         namespace="airflow",
         image=image_tag,
         cmds=["sh", "-c"],
-        arguments=['echo "pulling image so that other tasks can use it"'],
+        arguments=[f'echo "Image used: {image_tag}"; echo "Date: {{ params.date }}'],
         get_logs=True,
         dag=dag,
     )
@@ -138,5 +137,4 @@ with DAG(
         do_xcom_push=False,
     )
 
-    # pull_data
-    pull_image >> pull_data >> ingest_job >> cubes_job
+    print_image_details >> pull_data >> ingest_job >> cubes_job
