@@ -53,17 +53,6 @@ with DAG(
     )
     logging.info("image being used: %s", image_tag)
 
-    print_image_details = KubernetesPodOperator(
-        task_id="print_image_details",
-        name="print_image_details",
-        namespace="airflow",
-        image=image_tag,
-        cmds=["sh", "-c"],
-        arguments=[f'echo "Image used: {image_tag}"; echo "Date: {{ params.date }}"'],
-        get_logs=True,
-        dag=dag,
-    )
-
     pull_data = KubernetesPodOperator(
         task_id="pull_data",
         name="pull-data",
@@ -137,4 +126,4 @@ with DAG(
         do_xcom_push=False,
     )
 
-    print_image_details >> pull_data >> ingest_job >> cubes_job
+    pull_data >> ingest_job >> cubes_job
