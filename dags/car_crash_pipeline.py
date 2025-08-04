@@ -59,7 +59,7 @@ with DAG(
         namespace="airflow",
         image=image_tag,
         cmds=["sh", "-c"],
-        arguments=[f'echo "Image used: {image_tag}"; echo "Date: {{ params.date }}'],
+        arguments=[f'echo "Image used: {image_tag}"; echo "Date: {{ params.date }}"'],
         get_logs=True,
         dag=dag,
     )
