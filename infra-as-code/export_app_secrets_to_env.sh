@@ -10,7 +10,7 @@ touch $KEY_FILE
 for key in $(jq -r 'keys[]' $JSONFILE); do
   value=$(jq -r --arg k "$key" '.[$k]'  $JSONFILE)
   echo "$key=$value" >> $GITHUB_ENV
-  echo "$key=$value" >> $KEY_FILE
+  echo "export $key=$value" >> $KEY_FILE
 done
 chmod 400 $KEY_FILE
 echo "---"
