@@ -38,7 +38,7 @@ data:
     blob_storage_endpoint_url = https://sgp1.digitaloceanspaces.com
 
     [pull_job]
-    #raw_data_path = /opt/daily_pipeline_car_crash/data/crash_data
+    #raw_data_path = /opt/data_pipeline_app/data/crash_data
     raw_data_path = ${RAW_DATA_PATH:/tmp/crash_data_raw}
     # name vs id
     datasets =  {"crashes": {"id": "85ca-t3if", "time_column" : "crash_date"},  "crashes_people": {"id": "u6pd-qa9d", "time_column" : "crash_date"}, "crashes_vehicles": {"id": "68nd-jvt3", "time_column" : "crash_date"}}
@@ -58,7 +58,7 @@ data:
     wh_path = ${ICEBERG_PATH:/tmp/crash_data_iceberg}
 
     [cubes]
-    json_path = /opt/daily_pipeline_car_crash/config/cubes.json
+    json_path = /opt/data_pipeline_app/config/cubes.json
     output_path = /tmp/cubes
 
     [spark]

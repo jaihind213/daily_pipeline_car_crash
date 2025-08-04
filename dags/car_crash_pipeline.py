@@ -22,7 +22,7 @@ default_args = {
 with DAG(
     dag_id="chicago_car_crash_pipeline",
     default_args=default_args,
-    description="Runs daily car crash pipeline with config and date using Spark on Kubernetes",  # noqa: E501
+    description="Runs daily car crash pipeline with & and date using Spark on Kubernetes",  # noqa: E501
     schedule_interval="@daily",
     start_date=datetime.now(),
     catchup=False,
@@ -44,7 +44,7 @@ with DAG(
     # Define the volume mount
     common_config_volume_mount = k8s.V1VolumeMount(
         name="common-config-volume",
-        mount_path="/opt/daily_pipeline_car_crash/config/",
+        mount_path="/opt/data_pipeline_app/config/",
         read_only=True,
     )
 
@@ -73,7 +73,7 @@ with DAG(
         cmds=[
             "python3",
             "etl/pull_data_job.py",
-            "/opt/daily_pipeline_car_crash/config/default_job_config.ini",
+            "/opt/data_pipeline_app/config/default_job_config.ini",
             "{{ params.date }}",
         ],
         env_from=du.get_env_from_secret("car-crash-secret"),
@@ -84,14 +84,14 @@ with DAG(
         volume_mounts=[common_config_volume_mount],
         startup_timeout_seconds=300,
         env_vars=[
-            V1EnvVar(name="PYTHONPATH", value="/opt/daily_pipeline_car_crash"),
+            V1EnvVar(name="PYTHONPATH", value="/opt/data_pipeline_app"),
         ],
     )
 
     # # Create application files
-    ingest_job_main_file = "local:///opt/daily_pipeline_car_crash/etl/ingest_job.py"
+    ingest_job_main_file = "local:///opt/data_pipeline_app/etl/ingest_job.py"
     ingest_job_args = [
-        "/opt/daily_pipeline_car_crash/config/default_job_config.ini",
+        "/opt/data_pipeline_app/config/default_job_config.ini",
         "{{ params.date }}",
     ]
     ingest_job_spark_config = du.get_config_map_data("ingest-job-config-map")
@@ -103,7 +103,7 @@ with DAG(
         image_tag,
         "car-crash-secret",
         "common-config-map",
-        "/opt/daily_pipeline_car_crash/config",
+        "/opt/data_pipeline_app/config",
     )
     ingest_job = SparkKubernetesOperator(
         task_id="ingest_iceberg",
@@ -114,9 +114,9 @@ with DAG(
     )
 
     # # Create application files
-    cubes_job_main_file = "local:///opt/daily_pipeline_car_crash/etl/cubes_job.py"
+    cubes_job_main_file = "local:///opt/data_pipeline_app/etl/cubes_job.py"
     cubes_job_args = [
-        "/opt/daily_pipeline_car_crash/config/default_job_config.ini",
+        "/opt/data_pipeline_app/config/default_job_config.ini",
         "{{ params.date }}",
     ]
     cubes_job_spark_config = du.get_config_map_data("cubes-job-config-map")
@@ -128,7 +128,7 @@ with DAG(
         image_tag,
         "car-crash-secret",
         "common-config-map",
-        "/opt/daily_pipeline_car_crash/config",
+        "/opt/data_pipeline_app/config",
     )
     cubes_job = SparkKubernetesOperator(
         task_id="cubes_on_iceberg",
