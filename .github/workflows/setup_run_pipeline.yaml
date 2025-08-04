@@ -31,7 +31,13 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
-
+      - name: test source
+        run: |
+          echo '${{ secrets.APP_SECRETS_JSON }}' > secret.json
+          infra-as-code/export_app_secrets_to_env.sh secret.json .env_keys
+          source .env_keys
+          echo $SOCRATA_TOKEN
+          echo "-----"
       - name: Set up Helm
         uses: azure/setup-helm@v3
         with:
