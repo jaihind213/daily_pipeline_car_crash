@@ -55,7 +55,7 @@ with DAG(
 
     print_image_details = KubernetesPodOperator(
         task_id="print_image_details",
-        name="pull_image",
+        name="print_image_details",
         namespace="airflow",
         image=image_tag,
         cmds=["sh", "-c"],
