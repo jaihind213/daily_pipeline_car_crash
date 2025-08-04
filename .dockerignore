@@ -1,7 +1,7 @@
 *_test.py
 poetry.lock
 pyproject.toml
-README.md
+#README.md
 Dockerfile
 .dockerignore
 __pycache__
