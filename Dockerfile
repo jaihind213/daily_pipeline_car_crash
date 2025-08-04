@@ -16,7 +16,7 @@ RUN mkdir -p /opt/data_pipeline_app/config \
     && mkdir -p /opt/data_pipeline_app/data \
     && mkdir -p /opt/data_pipeline_app/etl \
     && mkdir -p /opt/spark_jars \
-    && chmod -R 755 /opt/spark_jars \
+    && chmod -R 755 /opt/spark_jars
 
 COPY ./README.md /opt/data_pipeline_app/
 COPY ./requirements.txt /opt/data_pipeline_app/etl
