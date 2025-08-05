@@ -35,14 +35,6 @@ jobs:
         uses: azure/setup-helm@v3
         with:
           version: v3.14.0
-
-      - name: Set REPO_URL/BRANCH environment variable for airflow git sync
-        run: |
-          echo "REPO_URL=https://github.com/${{ github.repository }}.git" >> $GITHUB_ENV
-          echo ${{ env.REPO_URL }}
-          echo "REPO_BRANCH_DAG_SYNC=${{ github.ref_name }}" >> $GITHUB_ENV
-          echo ${{ env.REPO_BRANCH_DAG_SYNC }}
-
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
         with:
@@ -245,6 +237,12 @@ jobs:
           envsubst < dag_secrets_template.yaml | kubectl create  --namespace airflow -f - --dry-run=client -o json | kubeseal --namespace airflow --controller-namespace=sealed-secrets --scope=strict --format=yaml > dag-sealed-secret.yaml
           kubectl apply -f dag-sealed-secret.yaml -n airflow
           rm -rf .env_keys
+      - name: Set REPO_URL/BRANCH environment variable for airflow git sync
+        run: |
+          echo "REPO_URL=https://github.com/${{ github.repository }}.git" >> $GITHUB_ENV
+          echo ${{ env.REPO_URL }}
+          echo "REPO_BRANCH_DAG_SYNC=${{ github.ref_name }}" >> $GITHUB_ENV
+          echo ${{ env.REPO_BRANCH_DAG_SYNC }}
       - name: 🌀༄ Airflow setup
         run: |
           cd infra-as-code/airflow
@@ -305,7 +303,6 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-
       - name: Install dependencies
         run: |
           cd infra-as-code
