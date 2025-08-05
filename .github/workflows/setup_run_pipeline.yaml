@@ -21,7 +21,6 @@ env:
   K8S_BOOTUP_TIME_SEC: ${{ vars.K8S_BOOTUP_TIME_SEC }}
   DAG_RUN_TIME_SEC: ${{ vars.DAG_RUN_TIME_SEC }}
   DAG_NAME: chicago_car_crash_pipeline
-  REPO_BRANCH_DAG_SYNC: templating
   #PULUMI_STACK_NAME: prod
 jobs:
   setup_infra:
@@ -37,13 +36,12 @@ jobs:
         with:
           version: v3.14.0
 
-      - name: Set REPO_URL environment variable
+      - name: Set REPO_URL/BRANCH environment variable for airflow git sync
         run: |
           echo "REPO_URL=https://github.com/${{ github.repository }}.git" >> $GITHUB_ENV
           echo ${{ env.REPO_URL }}
-          echo "BRANCH_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
-          echo ${{ env.BRANCH_NAME }}
-          exit 1
+          echo "REPO_BRANCH_DAG_SYNC=${{ github.ref_name }}" >> $GITHUB_ENV
+          echo ${{ env.REPO_BRANCH_DAG_SYNC }}
 
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
