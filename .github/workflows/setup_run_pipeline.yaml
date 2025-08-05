@@ -21,6 +21,7 @@ env:
   K8S_BOOTUP_TIME_SEC: ${{ vars.K8S_BOOTUP_TIME_SEC }}
   DAG_RUN_TIME_SEC: ${{ vars.DAG_RUN_TIME_SEC }}
   DAG_NAME: chicago_car_crash_pipeline
+  REPO_BRANCH_DAG_SYNC: main
   #PULUMI_STACK_NAME: prod
 jobs:
   setup_infra:
@@ -35,6 +36,12 @@ jobs:
         uses: azure/setup-helm@v3
         with:
           version: v3.14.0
+
+      - name: Set REPO_URL environment variable
+        run: |
+          echo "REPO_URL=https://github.com/${{ github.repository }}.git" >> $GITHUB_ENV
+          echo ${{ env.REPO_URL }}
+          exit 1
 
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
@@ -247,6 +254,8 @@ jobs:
           export AF_EMAIL=${{ secrets.AF_EMAIL }}
           export AF_USER=${{ secrets.AF_USER }}
           export AF_KEY=${{ secrets.AF_KEY }}
+          export REPO_URL=${{ env.REPO_URL }}
+          export REPO_BRANCH_DAG_SYNC=${{ env.REPO_BRANCH_DAG_SYNC }}
 
           envsubst < airflow_values_template.yaml > airflow_values.yaml
           helm repo add apache-airflow https://airflow.apache.org || echo "airflow repo added"
