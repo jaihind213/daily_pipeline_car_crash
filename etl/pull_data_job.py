@@ -4,11 +4,11 @@ import sys
 import traceback
 from datetime import datetime
 
-from car_crash import puller
-from car_crash.config import get_config, setup
-from car_crash.date_util import get_job_date
-from car_crash.metrics import report_job_stats
-from car_crash.utilz import get_output_path
+from etl import puller
+from etl.config import get_config, setup
+from etl.date_util import get_job_date
+from etl.metrics import report_job_stats
+from etl.utilz import get_output_path
 
 logger = logging.getLogger("pull_data")
 

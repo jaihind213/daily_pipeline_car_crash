@@ -2782,8 +2782,8 @@ dags:
   #  enabled: false
   gitSync:
     enabled: true
-    repo: https://github.com/jaihind213/daily_pipeline_car_crash.git
-    branch: package
+    repo: ${REPO_URL}
+    branch: ${REPO_BRANCH_DAG_SYNC}
     subPath: dags
     credentialsSecret: git-credentials
     depth: 1

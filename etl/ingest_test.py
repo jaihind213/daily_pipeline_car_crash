@@ -3,9 +3,9 @@ from datetime import datetime
 
 from pyspark.sql import SparkSession
 
-from car_crash.ingest import ingest_to_iceberg
-from car_crash.puller import pull_chicago_dataset
-from car_crash.utilz import get_output_path
+from etl.ingest import ingest_to_iceberg
+from etl.puller import pull_chicago_dataset
+from etl.utilz import get_output_path
 
 os.environ["TZ"] = "GMT"
 # iceberg_jar = "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.8.1"

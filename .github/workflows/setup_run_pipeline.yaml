@@ -31,12 +31,10 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
-
       - name: Set up Helm
         uses: azure/setup-helm@v3
         with:
           version: v3.14.0
-
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
         with:
@@ -193,8 +191,8 @@ jobs:
           helm repo add apache-airflow https://airflow.apache.org
           helm repo update
           #helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-operator # gives 404, was working.
-          helm uninstall spark-operator -n spark-operator  || echo "it ok to fail"
-          helm uninstall airflow -n airflow  || echo "it ok to fail"
+          helm uninstall spark-operator -n spark-operator  --ignore-not-found
+          helm uninstall airflow -n airflow  --ignore-not-found
           helm repo add --force-update spark-operator https://kubeflow.github.io/spark-operator
           helm repo update
           helm repo list
@@ -230,14 +228,21 @@ jobs:
           kubectl get pods -A | grep sealed-secrets || echo "tried to get pods"
           kubectl create secret generic git-credentials --namespace airflow  --dry-run=client --from-literal=GIT_SYNC_USERNAME='${{ secrets.GIT_SYNC_USERNAME }}' --from-literal=GITSYNC_USERNAME='${{ secrets.GIT_SYNC_USERNAME }}' --from-literal=GIT_SYNC_PASSWORD='${{ secrets.GIT_SYNC_PASSWORD }}' --from-literal=GITSYNC_PASSWORD='${{ secrets.GIT_SYNC_PASSWORD }}' --from-literal=password=LOL -o json | kubeseal --namespace airflow --controller-namespace=sealed-secrets --scope=strict --format=yaml > my-secret-sealed.yaml
           kubectl apply -f my-secret-sealed.yaml -n airflow
-          export SOCRATA_TOKEN=${{ secrets.SOCRATA_APP_TOKEN }}
-          export S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}
-          export S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}
-          export ICEBERG_PATH=${{ secrets.ICEBERG_PATH }}
-          export RAW_DATA_PATH=${{ secrets.RAW_DATA_PATH }}
+          
+          #apply app secrets to airflow namespace
+          echo '${{ secrets.APP_SECRETS_JSON }}' > secret.json
+          infra-as-code/export_app_secrets_to_env.sh secret.json .env_keys
+          source .env_keys
           cd infra-as-code/k8s
           envsubst < dag_secrets_template.yaml | kubectl create  --namespace airflow -f - --dry-run=client -o json | kubeseal --namespace airflow --controller-namespace=sealed-secrets --scope=strict --format=yaml > dag-sealed-secret.yaml
           kubectl apply -f dag-sealed-secret.yaml -n airflow
+          rm -rf .env_keys
+      - name: Set REPO_URL/BRANCH environment variable for airflow git sync
+        run: |
+          echo "REPO_URL=https://github.com/${{ github.repository }}.git" >> $GITHUB_ENV
+          echo ${{ env.REPO_URL }}
+          echo "REPO_BRANCH_DAG_SYNC=${{ github.ref_name }}" >> $GITHUB_ENV
+          echo ${{ env.REPO_BRANCH_DAG_SYNC }}
       - name: 🌀༄ Airflow setup
         run: |
           cd infra-as-code/airflow
@@ -247,8 +252,13 @@ jobs:
           export AF_EMAIL=${{ secrets.AF_EMAIL }}
           export AF_USER=${{ secrets.AF_USER }}
           export AF_KEY=${{ secrets.AF_KEY }}
+          export REPO_URL=${{ env.REPO_URL }}
+          export REPO_BRANCH_DAG_SYNC=${{ env.REPO_BRANCH_DAG_SYNC }}
+          echo ${{ env.REPO_URL }}
+          echo ${{ env.REPO_BRANCH_DAG_SYNC }}
 
           envsubst < airflow_values_template.yaml > airflow_values.yaml
+          cat airflow_values.yaml|grep -i repo
           helm repo add apache-airflow https://airflow.apache.org || echo "airflow repo added"
           helm repo update
           helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml
@@ -293,7 +303,6 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-
       - name: Install dependencies
         run: |
           cd infra-as-code
@@ -318,30 +327,15 @@ jobs:
         run: |
           DAG_COMPUTE_DATE=$(date -d '2 days ago' '+%Y-%m-%d')
           echo "DAG_COMPUTE_DATE=$DAG_COMPUTE_DATE" >> $GITHUB_ENV
+      - name: Port-forward Airflow webserver
+        run: |
+          kubectl port-forward svc/airflow-webserver 8080:8080 --namespace airflow &
+          sleep 180
+          #check portforwarding
+          lsof -i :8080
       - name:  🔫 trigger & Check airflow dag status
         run: |
-          export SERVICE_NAME="airflow-lb"
-          export NAMESPACE="airflow"
-          if kubectl get svc "$SERVICE_NAME" -n "$NAMESPACE" >/dev/null 2>&1; then
-            echo "Service $SERVICE_NAME already exists in namespace $NAMESPACE. Skipping expose."
-          else
-            echo "Service $SERVICE_NAME does not exist. Creating..."
-            kubectl -n "$NAMESPACE" expose svc airflow-webserver \
-              --type=LoadBalancer \
-              --name="$SERVICE_NAME"
-          fi
-          #kubectl -n airflow expose svc airflow-webserver --type=LoadBalancer --name=airflow-lb
-          touch airflow-lb-ip.txt
-          EXTERNAL_IP=$(kubectl -n airflow get svc airflow-lb -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null)
-          
-          if [ -z "$EXTERNAL_IP" ]; then
-            echo "LoadBalancer IP not assigned or service does not exist. lets wait"
-            sleep 360
-          fi          
-          EXTERNAL_IP=$(kubectl -n airflow get svc airflow-lb -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null)
-          #kubectl -n airflow get svc airflow-lb |grep -v NAME |awk '{print $4}' | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' > airflow-lb-ip.txt
-          #cat airflow-lb-ip.txt
-          #export AIRFLOW_LB_IP=$(cat airflow-lb-ip.txt)
+          EXTERNAL_IP=localhost  
           export AIRFLOW_LB_IP=$EXTERNAL_IP
           echo "AIRFLOW_LB_IP=$AIRFLOW_LB_IP" >> $GITHUB_ENV
           sleep 300
@@ -418,8 +412,8 @@ jobs:
           pulumi refresh --yes
           echo "Deleting airflow load balancer service..."
           kubectl -n airflow delete svc airflow-lb --ignore-not-found
-          helm uninstall spark-operator -n spark-operator 
-          helm uninstall airflow -n airflow
+          helm uninstall spark-operator -n spark-operator --ignore-not-found
+          helm uninstall airflow -n airflow --ignore-not-found
           kubectl delete all --all  --wait=true --timeout=0s
           sleep 180
           kubectl delete pvc --all
