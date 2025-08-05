@@ -260,6 +260,7 @@ jobs:
           echo ${{ env.REPO_BRANCH_DAG_SYNC }}
 
           envsubst < airflow_values_template.yaml > airflow_values.yaml
+          cat airflow_values.yaml|grep -i repo
           helm repo add apache-airflow https://airflow.apache.org || echo "airflow repo added"
           helm repo update
           helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml
