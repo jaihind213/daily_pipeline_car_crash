@@ -256,6 +256,8 @@ jobs:
           export AF_KEY=${{ secrets.AF_KEY }}
           export REPO_URL=${{ env.REPO_URL }}
           export REPO_BRANCH_DAG_SYNC=${{ env.REPO_BRANCH_DAG_SYNC }}
+          echo ${{ env.REPO_URL }}
+          echo ${{ env.REPO_BRANCH_DAG_SYNC }}
 
           envsubst < airflow_values_template.yaml > airflow_values.yaml
           helm repo add apache-airflow https://airflow.apache.org || echo "airflow repo added"
