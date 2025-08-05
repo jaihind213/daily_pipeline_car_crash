@@ -329,7 +329,7 @@ jobs:
           echo "DAG_COMPUTE_DATE=$DAG_COMPUTE_DATE" >> $GITHUB_ENV
       - name: Port-forward Airflow webserver
         run: |
-          kubectl port-forward svc/airflow-webserver 8080:8080 &
+          kubectl port-forward svc/airflow-webserver 8080:8080 --namespace airflow &
           sleep 180
       - name:  🔫 trigger & Check airflow dag status
         run: |
