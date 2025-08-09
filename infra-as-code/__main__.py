@@ -10,6 +10,7 @@ project_name = os.environ.get("PROJECT_NAME", "first-project")
 cluster_name = os.environ.get(
     "KUBERNETES_CLUSTER_ID", "k8s-1-33-1-do-3-sgp1-1754714430629"
 )
+# invalid version slug error fix the version looking at digital ocean console whats available.
 version = "1.33.1-do.3"
 pool_name = os.environ.get("KUBERNETES_POOL_ID", "pool-k81x1jrz8")
 tags = ["k8s", "testing", project_name, f"pulumi_stack_{stack_name}"]
