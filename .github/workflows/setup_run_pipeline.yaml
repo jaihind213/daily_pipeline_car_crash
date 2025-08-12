@@ -247,7 +247,6 @@ jobs:
         run: |
           cd infra-as-code/airflow
           export PGKEY=${{ secrets.PGKEY }}
-          exit 1
           export AF_FN=${{ secrets.AF_FN }}
           export AF_LN=${{ secrets.AF_LN }}
           export AF_EMAIL=${{ secrets.AF_EMAIL }}
