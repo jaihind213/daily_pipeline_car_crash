@@ -247,6 +247,7 @@ jobs:
         run: |
           cd infra-as-code/airflow
           export PGKEY=${{ secrets.PGKEY }}
+          exit 1
           export AF_FN=${{ secrets.AF_FN }}
           export AF_LN=${{ secrets.AF_LN }}
           export AF_EMAIL=${{ secrets.AF_EMAIL }}
@@ -389,6 +390,24 @@ jobs:
         run: pulumi login
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+      - name: 🏗️Set up Pulumi stack
+        id: setup_up_pulumi_stack
+        run: |
+          cd infra-as-code
+          export PULUMI_STACK_NAME=${{ github.event.inputs.stack_name }}
+          echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_ENV
+          pulumi stack select $PULUMI_STACK_NAME || pulumi stack init $PULUMI_STACK_NAME
+          pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
+          pulumi refresh --yes --stack $PULUMI_STACK_NAME
+          OUTPUT=$(pulumi stack output k8s_cluster_id || echo "")
+          if [ -n "$OUTPUT" ]; then
+            echo "K8S_CLUSTER_ID=$OUTPUT" >> $GITHUB_ENV
+            echo "✅ Exported K8S_CLUSTER_ID"
+          else
+            echo "❌ Failed to export K8S_CLUSTER_ID"
+            exit 1
+          fi
 
       - name: 💾Save DigitalOcean kubeconfig
         run: |
