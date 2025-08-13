@@ -68,6 +68,7 @@ jobs:
             export PULUMI_STACK_NAME="prod"
           fi
           echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_ENV
+          echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_OUTPUT
           echo ${{ env.PULUMI_STACK_NAME }}
           #k8s-1-33-1-do-2-sgp1-1753321136291
           #pool-k81x1jrz8
@@ -394,7 +395,7 @@ jobs:
         id: setup_up_pulumi_stack
         run: |
           cd infra-as-code
-          export PULUMI_STACK_NAME=${{ github.event.inputs.stack_name }}
+          export PULUMI_STACK_NAME=${{ needs.build.outputs.setup_infra_PULUMI_STACK_NAME }}
           echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_ENV
           pulumi stack select $PULUMI_STACK_NAME || pulumi stack init $PULUMI_STACK_NAME
           pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
