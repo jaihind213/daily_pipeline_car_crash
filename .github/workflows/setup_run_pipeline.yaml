@@ -68,6 +68,7 @@ jobs:
             export PULUMI_STACK_NAME="prod"
           fi
           echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_ENV
+          echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_OUTPUT
           echo ${{ env.PULUMI_STACK_NAME }}
           #k8s-1-33-1-do-2-sgp1-1753321136291
           #pool-k81x1jrz8
@@ -396,9 +397,13 @@ jobs:
           cd infra-as-code
           export PULUMI_STACK_NAME=${{ github.event.inputs.stack_name }}
           echo "PULUMI_STACK_NAME=$PULUMI_STACK_NAME" >> $GITHUB_ENV
+          echo "1..."
           pulumi stack select $PULUMI_STACK_NAME || pulumi stack init $PULUMI_STACK_NAME
+          echo "2..."
           pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
+          echo "3..."
           pulumi refresh --yes --stack $PULUMI_STACK_NAME
+          echo "4..."
           OUTPUT=$(pulumi stack output k8s_cluster_id || echo "")
           if [ -n "$OUTPUT" ]; then
             echo "K8S_CLUSTER_ID=$OUTPUT" >> $GITHUB_ENV
@@ -407,27 +412,13 @@ jobs:
             echo "❌ Failed to export K8S_CLUSTER_ID"
             exit 1
           fi
-
       - name: 💾Save DigitalOcean kubeconfig
         run: |
           cd infra-as-code
-          doctl kubernetes cluster kubeconfig save ${{ needs.setup_infra.outputs.k8s_cluster_id }}
+          doctl kubernetes cluster kubeconfig save ${{ env.K8S_CLUSTER_ID }}
       - name: 💥tear down all resources
         run: |
           cd infra-as-code
-          export PULUMI_STACK_NAME=${{ github.event.inputs.stack_name }}
-          export TEAR_DOWN=${{ github.event.inputs.should_tear_down }}
-          if [ "$TEAR_DOWN" != "true" ]; then
-            echo "Skipping tear down as per input."
-            exit 0
-          fi
-          if [ -z "$PULUMI_STACK_NAME" ]; then
-            echo "PULUMI_STACK_NAME is not set, using default 'prod'"
-            export PULUMI_STACK_NAME="prod"
-          fi
-          pulumi stack select $PULUMI_STACK_NAME
-          pulumi config set digitalocean:token ${{ secrets.DO_TOKEN }} --secret
-          pulumi refresh --yes
           echo "Deleting airflow load balancer service..."
           kubectl -n airflow delete svc airflow-lb --ignore-not-found
           helm uninstall spark-operator -n spark-operator --ignore-not-found
