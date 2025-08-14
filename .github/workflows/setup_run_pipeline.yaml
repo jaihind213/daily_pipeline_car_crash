@@ -396,7 +396,7 @@ jobs:
         run: |
           cd infra-as-code
           export PULUMI_STACK_NAME=${{ github.event.inputs.stack_name }}
-           if [ -z "$PULUMI_STACK_NAME" ]; then
+          if [ -z "$PULUMI_STACK_NAME" ]; then
             echo "PULUMI_STACK_NAME is not set, using default 'prod'"
             export PULUMI_STACK_NAME="prod"
           fi
