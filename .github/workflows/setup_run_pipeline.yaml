@@ -263,7 +263,7 @@ jobs:
           helm repo add apache-airflow https://airflow.apache.org || echo "airflow repo added"
           helm repo update
           helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml
-          sleep 180
+          sleep 500
       - name: 📣 Apply Configs
         run: |
           cd infra-as-code/k8s/app_configs
