@@ -422,6 +422,12 @@ jobs:
           doctl kubernetes cluster kubeconfig save ${{ env.K8S_CLUSTER_ID }}
       - name: 💥tear down all resources
         run: |
+          export SHOULD_TEAR_DOWN=${{ github.event.inputs.should_tear_down }}
+          if [ -z "$SHOULD_TEAR_DOWN" ]; then
+            echo "SHOULD_TEAR_DOWN is not set. will tear down infra"
+          else
+            exit 0
+          fi
           cd infra-as-code
           echo "Deleting airflow load balancer service..."
           kubectl -n airflow delete svc airflow-lb --ignore-not-found
