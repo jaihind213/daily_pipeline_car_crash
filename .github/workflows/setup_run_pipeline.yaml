@@ -263,7 +263,7 @@ jobs:
           helm repo add apache-airflow https://airflow.apache.org || echo "airflow repo added"
           helm repo update
           helm upgrade --install airflow apache-airflow/airflow -n airflow --create-namespace -f airflow_values.yaml
-          sleep 180
+          sleep 500
       - name: 📣 Apply Configs
         run: |
           cd infra-as-code/k8s/app_configs
@@ -422,6 +422,11 @@ jobs:
           doctl kubernetes cluster kubeconfig save ${{ env.K8S_CLUSTER_ID }}
       - name: 💥tear down all resources
         run: |
+          export SHOULD_TEAR_DOWN=${{ github.event.inputs.should_tear_down }}
+          if [ "$SHOULD_TEAR_DOWN" == "false" ]; then
+            echo "SHOULD_TEAR_DOWN is set to false. will not tear down"
+            exit 0           
+          fi
           cd infra-as-code
           echo "Deleting airflow load balancer service..."
           kubectl -n airflow delete svc airflow-lb --ignore-not-found
