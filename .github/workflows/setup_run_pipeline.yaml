@@ -14,8 +14,8 @@ on:
         description: 'stack name ?'
         required: true
         default: 'prod'
-  schedule:
-    - cron: '5 1 * * *'  # Runs daily at 00:05:00 AM GMT
+#  schedule:
+#    - cron: '5 1 * * *'  # Runs daily at 00:05:00 AM GMT
 
 env:
   K8S_BOOTUP_TIME_SEC: ${{ vars.K8S_BOOTUP_TIME_SEC }}
